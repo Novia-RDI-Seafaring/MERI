@@ -1,0 +1,42 @@
+name: layout_analysis
+channels:
+  - defaults
+  - pytorch 
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.12
+  - conda==24.3.0
+  - setuptools
+  - pip
+  - wheel
+  - conda-content-trust
+  - conda-libmamba-solver
+  - menuinst
+  - anaconda-anon-usage
+  - pytorch
+  - pytorch-cuda=12.1
+  - torchaudio
+  - torchvision¨
+  - opencv
+  - pip:
+    - 'git+https://github.com/facebookresearch/detectron2.git'
+    - notebook
+    - timm
+    - PyMuPDF
+    - pillow
+    - numpy
+    - easyocr
+    - pytesseract
+    - transformers
+    - scipy
+    - shapely
+    - transformers
+    - deepdoctection
+    - python-dotenv
+    - python-doctr
+    - git+https://github.com/Novia-RDI-Seafaring/pdf-data-extractor.git  
+    - pdfplumber 
+    - gradio
+    - tabula-py
+prefix: /root/miniconda3

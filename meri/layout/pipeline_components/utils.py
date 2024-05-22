@@ -2,6 +2,9 @@ import numpy as np
 import deepdoctection as dd
 from PIL import Image, ImageDraw
 from typing import List, Tuple
+import os
+
+CONFIGS_PATH = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir, 'config'))
 
 class ProcessingService:
 

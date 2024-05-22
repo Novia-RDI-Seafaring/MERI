@@ -7,26 +7,26 @@ COMPONENTS:
   - CLASS: LayoutDetectorComponent
     KWARGS: 
       cover_prev_anns: True
-      cfg_path: 'config/layout_detector_config.yaml'
+      cfg_path: 'layout_detector_config.yaml'
       method: 'd2layout'
       config_overwrite: ['PT.LAYOUT.FILTER=["table", "figure"]']
   - CLASS: LayoutDetectorComponent
     KWARGS:
       cover_prev_anns: True
-      cfg_path: 'config/table_detector_config.yaml'
+      cfg_path: 'table_detector_config.yaml'
       method: 'detr'
   - CLASS: LayoutDetectorComponent
     KWARGS:
       cover_prev_anns: True
-      cfg_path: 'config/layout_detector_config.yaml'
+      cfg_path: 'layout_detector_config.yaml'
       method: 'd2layout'
       config_overwrite: ['PT.LAYOUT.FILTER=["text", "title", "list", "table"]']
   - CLASS: NMSComponent
     KWARGS:
-      cfg_path: 'config/nms.yaml'
+      cfg_path: 'nms.yaml'
   - CLASS: OCRComponent
     KWARGS:
-      cfg_path: 'config/tesseract_config.yaml'
+      cfg_path: 'tesseract_config.yaml'
       method: 'tesseract'
   - CLASS: WordUnionComponent
     KWARGS: 

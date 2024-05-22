@@ -1,11 +1,15 @@
 import deepdoctection as dd
-
+import os
+from .utils import CONFIGS_PATH
 
 class NMSComponent(dd.AnnotationNmsService):
     ''' Applied NMS. Elements in specification need to have score property in annotations
     '''
 
     def __init__(self, cfg_path='nms.yaml'):
+
+        if not os.path.exists(cfg_path):
+            cfg_path = os.path.join(CONFIGS_PATH, cfg_path)
 
         cfg = dd.set_config_by_yaml(cfg_path)
 

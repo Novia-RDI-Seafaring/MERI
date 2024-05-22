@@ -1,5 +1,6 @@
 import deepdoctection as dd
-
+import os
+from .utils import CONFIGS_PATH
 
 class OCRComponent(dd.TextExtractionService):
     ''' Extracts text. Depending on specified method different OCR methods
@@ -16,6 +17,9 @@ class OCRComponent(dd.TextExtractionService):
     def __init__(self, cfg_path: str ='config/tesseract_config.yaml', method='tesseract'):
         ''' provide path to config.yaml. 
         '''
+
+        if not os.path.exists(cfg_path):
+            cfg_path = os.path.join(CONFIGS_PATH, cfg_path)
         
         if method == 'tesseract':
             detector = dd.TesseractOcrDetector(cfg_path)

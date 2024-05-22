@@ -8,3 +8,4 @@ from .image_detector_component import ImageDetectorComponent
 from .table_detector_component import TableDetectorComponent
 from .word_union_component import WordUnionComponent
 from .text_detector_component import TextDetectorComponent
+from .table_plumber_detector_component import TablePlumberComponent

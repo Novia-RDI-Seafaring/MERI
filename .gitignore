@@ -1,2 +1,5 @@
 .env
 .devcontainer
+**.pdf
+**__pycache__
+*.ipynb

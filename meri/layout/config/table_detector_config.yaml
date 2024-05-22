@@ -1,0 +1,9 @@
+
+
+PT:
+  LAYOUT:
+    WEIGHTS: microsoft/table-transformer-detection/pytorch_model.bin
+    FILTER:
+
+LIB: PT
+DEVICE: cuda

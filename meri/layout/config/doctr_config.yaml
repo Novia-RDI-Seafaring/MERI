@@ -1,0 +1,8 @@
+WEIGHTS:
+  DOCTR_WORD:
+    PT: doctr/db_resnet50/pt/db_resnet50-ac60cadc.pt
+  DOCTR_RECOGNITION:
+    PT: doctr/crnn_vgg16_bn/pt/crnn_vgg16_bn-9762b0b0.pt
+
+LIB: PT
+DEVICE: cpu

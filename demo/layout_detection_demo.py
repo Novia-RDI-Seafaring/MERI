@@ -11,14 +11,15 @@ from meri.layout.pipeline_components import (AddPDFInfoComponent,
                         OCRComponent,
                         ImageDetectorComponent,
                         DrawingsDetectorComponent,
+                        TablePlumberComponent,
                         TableDetectorComponent)
 from meri.layout.pipeline import Pipeline
+
 from matplotlib import pyplot as plt 
 import matplotlib
 import numpy as np
 from PIL import Image, ImageDraw
 import fitz
-layout_config_base_path = os.path.abspath(os.path.join('meri', 'layout', 'config'))
 
 cmap = matplotlib.colormaps['nipy_spectral']
 
@@ -29,6 +30,7 @@ component_order_mapping = {
     DrawingsDetectorComponent.__name__: 1,
     ImageDetectorComponent.__name__: 1,
     TableDetectorComponent.__name__: 1,
+    TablePlumberComponent.__name__: 1,
     OCRComponent.__name__: 2,
     dd.TextOrderService.__name__: 3
 }
@@ -62,35 +64,35 @@ pipeline_components_map = {
         'display_name': 'DL Object Detector',
         'info': 'Applies object detection model to detect layout components like tables, figures, etc.',
         'class': LayoutDetectorComponent,
-        'kwargs': {'cfg_path': f'{layout_config_base_path}/layout_detector_config.yaml',
+        'kwargs': {'cfg_path': 'layout_detector_config.yaml',
                    'method':'d2layout'}
     },
     'DLTableDetector':{
         'display_name': 'DL Table Detector',
         'info': 'Applies object detection model to detect tables.',
         'class': LayoutDetectorComponent,
-        'kwargs': {'cfg_path': f'{layout_config_base_path}/table_detector_config.yaml',
+        'kwargs': {'cfg_path': 'table_detector_config.yaml',
                    'method':'detr'}
     },
     'DocTrWordDetector':{
         'display_name': 'DocTr Word Detector',
         'info': 'Detect words with DocTr.',
         'class': LayoutDetectorComponent,
-        'kwargs': {'cfg_path': f'{layout_config_base_path}/doctr_config.yaml',
+        'kwargs': {'cfg_path': 'doctr_config.yaml',
                    'method':'doctr_textdetector'}
     },
     'DocTrOCR':{
         'display_name': 'DocTr OCR',
         'info': 'Required DocTr word detector. Extract text from detected words.',
         'class': OCRComponent,
-        'kwargs': {'cfg_path': f'{layout_config_base_path}/doctr_config.yaml',
+        'kwargs': {'cfg_path': 'doctr_config.yaml',
                    'method':'doctr'}
     },
     'TesseractOCR':{
         'display_name': 'Tesseract OCR',
         'info': 'Applies Tesseract OCR.',
         'class': OCRComponent,
-        'kwargs': {'cfg_path': f'{layout_config_base_path}/tesseract_config.yaml',
+        'kwargs': {'cfg_path': 'tesseract_config.yaml',
                    'method':'tesseract'}
     },
     'TextOrdering':{
@@ -99,16 +101,14 @@ pipeline_components_map = {
         'class': dd.TextOrderService,
         'kwargs': {'text_container': dd.LayoutType.word},
     },
+    'TablePlumber': {
+        'display_name': 'Table plumber detecor',
+        'info': 'Detect tables using pdfplumber library',
+        'class': TablePlumberComponent,
+        'kwargs': {}
+    }
 }
 
-
-'''
-def upload_pdf():
-    
-    im = singlePagePDF.toImage()
-
-    return gr.update(value=im), gr.update(value=im), gr.update(visible=True), gr.update(visible=False)
-'''
 
 def select_im(images, annotated_images, page_id):
     if len(annotated_images) != len(images):

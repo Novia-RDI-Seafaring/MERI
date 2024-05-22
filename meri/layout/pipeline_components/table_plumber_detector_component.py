@@ -1,6 +1,6 @@
 import deepdoctection as dd
 from typing import List
-from .utils import scale_coords
+from .utils import scale_coords, ProcessingService
 
 class TablePlumberComponent(dd.PipelineComponent):
     def __init__(self):

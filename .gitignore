@@ -2,4 +2,4 @@
 .devcontainer
 **.pdf
 **__pycache__
-.ipynb
+/*.ipynb

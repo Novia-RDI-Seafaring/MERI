@@ -3,7 +3,7 @@ from .page_element import PageElement
 from PIL import Image
 import pdfplumber.page
 import fitz
-from typing import Tuple
+from typing import Tuple, List, Dict
 
 class Table(PageElement):
     """ Content class for Table elements.
@@ -57,7 +57,7 @@ class Table(PageElement):
 
         return potential_tables
 
-    def get_content(self):
+    def get_content(self) -> List[List[List[Dict[str, str | Tuple[float,float,float,float]]]]]:
         """ Extract and return content of table as a list of lists.
         """
         if self.content is None:
@@ -77,7 +77,7 @@ class Table(PageElement):
                             if current_row:
                                 table_text.append(current_row)
                             current_row = []
-                        current_row.append(block['text'])
+                        current_row.append({'text': block['text'], 'bbox': [block['x0'], block['top'], block['x1'], block['bottom']]})
                         last_top = block['top']
                     if current_row:
                         table_text.append(current_row)
@@ -86,6 +86,7 @@ class Table(PageElement):
 
                 self.content = tables
             else:
+                print('Extract tables with fallback option fitz')
                 # Fallback to fitz if pdfplumber fails
                 table_rect = fitz.Rect(*self.pdf_bbox)
                 table_text_page = self.fitz_page.get_textpage(clip=table_rect)
@@ -113,13 +114,13 @@ class Table(PageElement):
         # Generate the markdown for each table
         markdown_tables = []
         for table in content:
+            table=[[cell['text'] for cell in row] for row in table]
             # If table is a list of lists of strings
             if not isinstance(table, list) or not all(isinstance(row, list) for row in table):
                 continue
 
             # Determine the number of columns from the longest row
             num_columns = max(len(row) for row in table)
-
             # Normalize the rows to have the same number of columns
             normalized_content = [row + [''] * (num_columns - len(row)) for row in table]
 

@@ -1,5 +1,6 @@
 from ...utils import pil_to_base64, pdf_to_im
 from .page_element import PageElement
+from .llm_extractor import GPTLayoutElementExtractor, GPT_TOOL_FUNCTIONS
 from PIL import Image
 import pdfplumber.page
 import fitz
@@ -9,7 +10,7 @@ class Table(PageElement):
     """ Content class for Table elements.
     """
 
-    def __init__(self, pdf_bbox: Tuple[float], im: Image, fitz_page: fitz.Page, plumber_page: pdfplumber.page) -> None:
+    def __init__(self, pdf_bbox: Tuple[float], im: Image, fitz_page: fitz.Page, plumber_page: pdfplumber.page, method='llm') -> None:
         """
         - pdf_bbox: bounding box in pdf coordinates that outlines table. Given by deepdoctection pipeline
         - im: pil image of table as detected by detector.
@@ -20,9 +21,68 @@ class Table(PageElement):
         self.detectiion_im = im
         self.fitz_page = fitz_page
         self.plumber_page = plumber_page
-        #self.content = None
+        self.method = method
 
-    def extract_potential_tables(self):
+    @classmethod
+    def extract_table_plumber(cls, fitz_page: fitz.Page, clip = None):
+
+        # Extracting potential tables using pdfplumber
+        potential_tables = cls.extract_potential_tables_pdfplumber(fitz_page, clip)
+        if potential_tables:
+            # Extract the text from the potential tables
+            tables = []
+            for table in potential_tables:
+                # Extract text from each block in the table and structure it into rows
+                table_text = []
+                current_row = []
+                last_top = table[0]['top']
+
+                for block in table:
+                    if block['top'] != last_top:
+                        if current_row:
+                            table_text.append(current_row)
+                        current_row = []
+                    current_row.append({'text': block['text'], 'bbox': [block['x0'], block['top'], block['x1'], block['bottom']]})
+                    last_top = block['top']
+                if current_row:
+                    table_text.append(current_row)
+
+                tables.append(table_text)
+
+            return tables
+        '''
+        else:
+            print('Extract tables with fallback option fitz')
+            # Fallback to fitz if pdfplumber fails
+            table_rect = fitz.Rect(*self.outer_bbox)
+            table_text_page = self.fitz_page.get_textpage(clip=table_rect)
+            table_text = table_text_page.extractText()
+
+            table_content = []
+            for line in table_text.split('\n'):
+                table_content.append([cell.strip() for cell in line.split(' ') if cell.strip()])
+
+            return [table_content]
+        '''
+
+    @classmethod
+    def extract_table_llm(cls, fitz_page: fitz.Page, clip = None):
+        table_im = pdf_to_im(fitz_page, cropbbox=clip)
+
+        words = fitz_page.get_textpage(clip=clip).extractWORDS()
+        words = [w[:5] for w in words]
+
+        gpt_extractor = GPTLayoutElementExtractor()
+        try:
+            tables, unmatchedData = gpt_extractor.extract_content(GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT, table_im, words_arr=words)
+        except Exception as e:
+            print('Exception occured when extracting table data with llm: ', e)
+            tables = [[]]
+        print('unmatched_data: ', unmatchedData)
+        return tables
+
+    @classmethod
+    def extract_potential_tables_pdfplumber(cls, plumber_page: pdfplumber.page, clip = None):
         '''
         Extract potential tables from a page using pdfplumber
         Args:
@@ -31,7 +91,8 @@ class Table(PageElement):
             list of potential tables
         '''
         # print("Extracting potential tables from pdfplumber")
-        crop_page = self.plumber_page.crop(self.pdf_bbox)  # Crop the page to the table bounding box
+        crop_page = plumber_page.crop(clip)  # Crop the page to the table bounding box
+        
         # Extract text blocks from the page
         text_blocks = crop_page.extract_words(keep_blank_chars=True)
         if not text_blocks:
@@ -60,46 +121,16 @@ class Table(PageElement):
     def get_content(self) -> List[List[List[Dict[str, str | Tuple[float,float,float,float]]]]]:
         """ Extract and return content of table as a list of lists.
         """
+
         if self.content is None:
-            # Extracting potential tables using pdfplumber
-            potential_tables = self.extract_potential_tables()
-            if potential_tables:
-                # Extract the text from the potential tables
-                tables = []
-                for table in potential_tables:
-                    # Extract text from each block in the table and structure it into rows
-                    table_text = []
-                    current_row = []
-                    last_top = table[0]['top']
-
-                    for block in table:
-                        if block['top'] != last_top:
-                            if current_row:
-                                table_text.append(current_row)
-                            current_row = []
-                        current_row.append({'text': block['text'], 'bbox': [block['x0'], block['top'], block['x1'], block['bottom']]})
-                        last_top = block['top']
-                    if current_row:
-                        table_text.append(current_row)
-
-                    tables.append(table_text)
-
-                self.content = tables
+            if self.method == 'pdfplumber':
+                self.content = self.extract_table_plumber(self.plumber_page, clip=self.outer_bbox)
+            elif self.method == 'llm':
+                self.content = self.extract_table_llm(self.fitz_page, clip=self.outer_bbox)
             else:
-                print('Extract tables with fallback option fitz')
-                # Fallback to fitz if pdfplumber fails
-                table_rect = fitz.Rect(*self.pdf_bbox)
-                table_text_page = self.fitz_page.get_textpage(clip=table_rect)
-                table_text = table_text_page.extractText()
-
-                table_content = []
-                for line in table_text.split('\n'):
-                    table_content.append([cell.strip() for cell in line.split(' ') if cell.strip()])
-
-                self.content = [table_content]
+                raise NotImplementedError
         else:
-            print("Content already extracted")
-
+             print("Content already extracted")
         return self.content
 
     def as_markdown_str(self) -> str:

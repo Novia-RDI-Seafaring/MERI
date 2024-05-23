@@ -41,7 +41,7 @@ def scale_coords(source_coords, source_height, source_width, target_height, targ
     return rect_shape
 
 
-def pil_to_base64(pil_image: Image):
+def pil_to_base64(pil_image: Image, raw=True):
     """ Converts PIL to base64 string
     """
     # Convert PIL Image to bytes
@@ -51,4 +51,7 @@ def pil_to_base64(pil_image: Image):
 
     # Convert bytes to base64 string
     base64_image = base64.b64encode(image_bytes).decode('utf-8')
-    return base64_image
+    if raw:
+        return base64_image
+    else: 
+        return f'data:image/png;base64,{base64_image}'

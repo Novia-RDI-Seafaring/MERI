@@ -16,11 +16,13 @@ class Format(Enum):
 
 class DocumentTransformer:
 
-    def __init__(self, pdf_path: str) -> None:
+    def __init__(self, pdf_path: str, table_extraction_method='llm') -> None:
         
         self.fitz_document = fitz.open(pdf_path)
         self.plumber_document = pdfplumber.open(pdf_path)
-        self.pages: List[PageTransformer] = [PageTransformer(fitz_page, plumber_page) for (fitz_page, plumber_page) in list(zip(self.fitz_document, self.plumber_document.pages))]
+        self.pages: List[PageTransformer] = [PageTransformer(fitz_page, 
+                                                             plumber_page,
+                                                             table_extraction_method=table_extraction_method) for (fitz_page, plumber_page) in list(zip(self.fitz_document, self.plumber_document.pages))]
 
     @property
     def unmatched_text_blocks(self):
@@ -63,9 +65,11 @@ class PageTransformer:
     deepdoctection pipeline does not get all content.
     """
 
-    def __init__(self, fitz_page: fitz.Page, plumber_page: pdfplumber.page) -> None:
+    def __init__(self, fitz_page: fitz.Page, plumber_page: pdfplumber.page, table_extraction_method = 'llm') -> None:
         self.fitz_page = fitz_page
         self.plumber_page = plumber_page
+
+        self.table_extraction_method = table_extraction_method
 
         # initialize it with all raw content. After each match, respective textblock is removed from
         # unmatched_text_blocks
@@ -141,7 +145,8 @@ class PageTransformer:
                     
                     element = Figure(bbox, im=cropped_im, fitz_page=self.fitz_page, plumber_page=self.plumber_page)
                 elif match_type == dd.LayoutType.table:
-                    element = Table(bbox, im=cropped_im, fitz_page=self.fitz_page, plumber_page=self.plumber_page)
+                    element = Table(bbox, im=cropped_im, fitz_page=self.fitz_page, plumber_page=self.plumber_page,
+                                    method=self.table_extraction_method)
                 else:
                     raise NotImplementedError
             

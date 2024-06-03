@@ -24,10 +24,10 @@ class Table(PageElement):
         self.method = method
 
     @classmethod
-    def extract_table_plumber(cls, fitz_page: fitz.Page, clip = None):
+    def extract_table_plumber(cls, plumber_page: pdfplumber.page, clip = None):
 
         # Extracting potential tables using pdfplumber
-        potential_tables = cls.extract_potential_tables_pdfplumber(fitz_page, clip)
+        potential_tables = cls.extract_potential_tables_pdfplumber(plumber_page, clip)
         if potential_tables:
             # Extract the text from the potential tables
             tables = []

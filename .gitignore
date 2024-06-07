@@ -2,4 +2,6 @@
 .devcontainer
 **.pdf
 **__pycache__
+results/
 /*.ipynb
+*.egg-info

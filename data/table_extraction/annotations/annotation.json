@@ -1,0 +1,195 @@
+{
+    "pdfs": [
+        {
+            "id": 1,
+            "width": 1654,
+            "height": 2339,
+            "file_name": "Alfa Laval LKH.pdf"
+        }
+    ],
+    "annotations": [
+        {
+            "id": 1,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 1,
+            "table_content_file": "Alfa Laval LKH_2_0.csv",
+            "bbox": [
+                145.56,
+                216.79,
+                1398.13,
+                222.76
+            ]
+        },
+        {
+            "id": 2,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 2,
+            "table_content_file": "Alfa Laval LKH_2_1.csv",
+            "bbox": [
+                146.99,
+                468.97,
+                1398.12,
+                108.45
+            ]
+        },
+        {
+            "id": 3,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 3,
+            "table_content_file": "Alfa Laval LKH_2_2.csv",
+            "bbox": [
+                146.99,
+                602.34,
+                1398.12,
+                108.45
+            ]
+        },
+        {
+            "id": 4,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 4,
+            "table_content_file": "Alfa Laval LKH_2_3.csv",
+            "bbox": [
+                148.04,
+                734.14,
+                1395.41,
+                132.44
+            ]
+        },
+        {
+            "id": 5,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 5,
+            "table_content_file": "Alfa Laval LKH_2_4.csv",
+            "bbox": [
+                149.03,
+                897.17,
+                1393.05,
+                66.76
+            ]
+        },
+        {
+            "id": 6,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 6,
+            "table_content_file": "Alfa Laval LKH_2_5.csv",
+            "bbox": [
+                151.6,
+                1047.39,
+                1391.76,
+                155.35
+            ]
+        },
+        {
+            "id": 7,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 7,
+            "table_content_file": "Alfa Laval LKH_2_6.csv",
+            "bbox": [
+                152.88,
+                1237.41,
+                1389.2,
+                132.24
+            ]
+        },
+        {
+            "id": 8,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 8,
+            "table_content_file": "Alfa Laval LKH_2_7.csv",
+            "bbox": [
+                150.31,
+                1404.32,
+                1394.34,
+                96.29
+            ]
+        },
+        {
+            "id": 9,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 9,
+            "table_content_file": "Alfa Laval LKH_2_8.csv",
+            "bbox": [
+                149.03,
+                1531.42,
+                1395.62,
+                130.96
+            ]
+        },
+        {
+            "id": 10,
+            "pdf_id": 1,
+            "page_id": 2,
+            "table_id": 10,
+            "table_content_file": "Alfa Laval LKH_2_9.csv",
+            "bbox": [
+                148.9,
+                1695.77,
+                1395.88,
+                103.22
+            ]
+        },
+        
+        {
+            "id": 11,
+            "pdf_id": 1,
+            "page_id": 3,
+            "table_id": 1,
+            "table_content_file": "Alfa Laval LKH_3_0.csv",
+            "bbox": [
+                153.37,
+                592.93,
+                1388.17,
+                187.97
+            ]
+        },
+        {
+            "id": 12,
+            "pdf_id": 1,
+            "page_id": 3,
+            "table_id": 2,
+            "table_content_file": "Alfa Laval LKH_3_1.csv",
+            "bbox": [
+                153.37,
+                864.1,
+                1386.63,
+                243.43
+            ]
+        },
+        {
+            "id": 13,
+            "pdf_id": 1,
+            "page_id": 3,
+            "table_id": 3,
+            "table_content_file": "Alfa Laval LKH_3_2.csv",
+            "bbox": [
+                151.52,
+                1233.71,
+                1386.63,
+                95.52
+            ]
+        },
+        {
+            "id": 14,
+            "pdf_id": 1,
+            "page_id": 3,
+            "table_id": 4,
+            "table_content_file": "Alfa Laval LKH_3_3.csv",
+            "bbox": [
+                149.82,
+                1468.05,
+                1392.18,
+                660.04
+            ]
+        }
+    ]
+}

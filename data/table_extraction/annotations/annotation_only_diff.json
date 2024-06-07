@@ -1,0 +1,25 @@
+{
+    "pdfs": [
+        {
+            "id": 1,
+            "width": 1654,
+            "height": 2339,
+            "file_name": "Alfa Laval LKH.pdf"
+        }
+    ],
+    "annotations": [
+        {
+            "id": 12,
+            "pdf_id": 1,
+            "page_id": 3,
+            "table_id": 2,
+            "table_content_file": "Alfa Laval LKH_3_1.csv",
+            "bbox": [
+                153.37,
+                864.1,
+                1386.63,
+                243.43
+            ]
+        }
+    ]
+}

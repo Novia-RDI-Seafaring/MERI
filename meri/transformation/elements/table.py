@@ -25,13 +25,28 @@ class Table(PageElement):
 
     @classmethod
     def extract_table_plumber(cls, plumber_page: pdfplumber.page, clip = None):
+        """_summary_
+
+        Args:
+            plumber_page (pdfplumber.page): _description_
+            clip (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: list of detected tables. Each table itself is 2D array
+            e.g. [
+                [[cell1, cell2,...],    # row1
+                [cell3, cell4]]         # row2
+            ]
+        """
 
         # Extracting potential tables using pdfplumber
         potential_tables = cls.extract_potential_tables_pdfplumber(plumber_page, clip)
-        if potential_tables:
+        
+        if len(potential_tables)>0: 
             # Extract the text from the potential tables
             tables = []
             for table in potential_tables:
+
                 # Extract text from each block in the table and structure it into rows
                 table_text = []
                 current_row = []
@@ -48,22 +63,10 @@ class Table(PageElement):
                     table_text.append(current_row)
 
                 tables.append(table_text)
-
+            
             return tables
-        '''
         else:
-            print('Extract tables with fallback option fitz')
-            # Fallback to fitz if pdfplumber fails
-            table_rect = fitz.Rect(*self.outer_bbox)
-            table_text_page = self.fitz_page.get_textpage(clip=table_rect)
-            table_text = table_text_page.extractText()
-
-            table_content = []
-            for line in table_text.split('\n'):
-                table_content.append([cell.strip() for cell in line.split(' ') if cell.strip()])
-
-            return [table_content]
-        '''
+            return []
 
     @classmethod
     def extract_table_llm(cls, fitz_page: fitz.Page, clip = None):
@@ -77,7 +80,7 @@ class Table(PageElement):
             tables, unmatchedData = gpt_extractor.extract_content(GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT, table_im, words_arr=words)
         except Exception as e:
             print('Exception occured when extracting table data with llm: ', e)
-            tables = [[]]
+            tables = []
         print('unmatched_data: ', unmatchedData)
         return tables
 

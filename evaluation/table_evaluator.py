@@ -113,8 +113,8 @@ class TableEvaluator:
         """
 
         table_results = []
-
-        for fitz_page, plumber_page, bbox, table_gt, ref in tqdm.tqdm(TableDataset(self.annotations_path, self.pdfs_path, self.ann_json_name)):
+        dataset = TableDataset(self.annotations_path, self.pdfs_path, self.ann_json_name)
+        for fitz_page, plumber_page, bbox, table_gt, ref in tqdm.tqdm(dataset, total=dataset.n):
 
             res_path = os.path.join(self.res_dir, 'table_extraction', self.extraction_method, 'pred_{}_{}_{}.pickle'.format(
                 Path(ref['file']).stem, ref["page_id"], ref["table_id"]))
@@ -142,10 +142,12 @@ class TableEvaluator:
 
                 table_res = self.compare_table(table_pred, table_gt, self.criteria)
                 table_res['ref'] = ref
+                table_res['extraction_method'] = self.extraction_method
                 table_results.append(table_res)
 
             except Exception as e:
                 print('Error occured while extracting tablular data from {}: {}'.format(ref, e))
+            print('acc: {}'.format(table_res['acc']))
 
         overall_res = {
             'total_tables': 0,

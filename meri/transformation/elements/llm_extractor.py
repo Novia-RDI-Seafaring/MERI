@@ -1,8 +1,9 @@
 import openai
 import deepdoctection as dd
 from PIL import Image
-from ...utils import chat_completion_request, pil_to_base64, generate_table_extraction_prompt
-from ...utils.pydantic_models import TableContentModel
+from ...utils import chat_completion_request, pil_to_base64, generate_table_extraction_prompt, generate_tsr_prompt
+from ...utils.pydantic_models import TableContentModel, TableContentArrayModel
+from ...utils import TableStructureModel
 import os
 from enum import Enum
 from typing import List
@@ -14,6 +15,7 @@ class GPT_TOOL_FUNCTIONS(Enum):
     """ values need to match function names in tools
     """
     EXTRACT_TABLE_CONTENT = 'extract_table_content'
+    EXTRACT_TABLE_STRUCTURE = 'extract_table_structure'
 
 
 class GPTLayoutElementExtractor:
@@ -23,7 +25,7 @@ class GPTLayoutElementExtractor:
             api_key = os.getenv("OPENAI_API_KEY")
         self.client = openai.Client(api_key=api_key)
     
-    def extract_content(self, tool_func: GPT_TOOL_FUNCTIONS, pil_im: Image, words_arr) -> List[TableContentModel]:
+    def extract_content(self, tool_func: GPT_TOOL_FUNCTIONS, pil_im: Image, words_arr, custom_jinja_prompt=None) -> TableContentArrayModel:
         """ uses multimodal gpt to extract information from an layout element. Leverages
         gpt function calls to force gpt response to follow a certain schema.
 
@@ -34,18 +36,26 @@ class GPTLayoutElementExtractor:
         Returns:
             List of TableContentModel: List of TableContentModel instances. one pil_im might contain multiple tables
         """
-        # select prompt in dependence to layout type
-        if tool_func.value == GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT.value:
-            prompt = generate_table_extraction_prompt(words_arr)
+
+        
+        if custom_jinja_prompt:
+            print('Custom prompt')
+            prompt = custom_jinja_prompt.render(words_arr=words_arr)
         else:
-            raise NotImplementedError
+            # select prompt in dependence to layout type
+            if tool_func.value == GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT.value:
+                prompt = generate_table_extraction_prompt(words_arr)
+            elif tool_func.value == GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_STRUCTURE.value:
+                prompt = generate_tsr_prompt(words_arr)
+            else:
+                raise NotImplementedError
 
         messages = [
             {
             "role": "user",
             "content": [
                 {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": pil_to_base64(pil_im, raw=False)}},
+                {"type": "image_url", "image_url": {"url": pil_to_base64(pil_im, raw=False), "detail": "high"}},
             ],
             }
         ]
@@ -61,9 +71,11 @@ class GPTLayoutElementExtractor:
         tool_calls = chat_response.choices[0].message.tool_calls
         if tool_func.value == GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT.value:
 
-            table = TableContentModel.model_validate_json(tool_calls[0].function.arguments)
-            return [table]
-            
+            tables = TableContentArrayModel.model_validate_json(tool_calls[0].function.arguments)#TableContentModel.model_validate_json(tool_calls[0].function.arguments)
+            return tables
+        elif tool_func.value == GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_STRUCTURE.value:
+            print('Arguments: ', tool_calls[0].function.arguments)
+            return TableStructureModel.model_validate_json(tool_calls[0].function.arguments)
         else:
             raise NotImplementedError()
 
@@ -73,7 +85,15 @@ tools = [
         "function": {
             "name": "extract_table_content",
             "description": "Get content of the table",
-            "parameters": TableContentModel.model_json_schema()
+            "parameters": TableContentArrayModel.model_json_schema() #TableContentModel.model_json_schema()
+            }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "extract_table_structure",
+            "description": "Get the structure of the table as a textual description",
+            "parameters": TableStructureModel.model_json_schema()
             }
     }
 ]

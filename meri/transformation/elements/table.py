@@ -1,5 +1,5 @@
 from ...utils import pil_to_base64, pdf_to_im
-from ...utils.pydantic_models import TableContentModel, TableCellContentModel, TableMetaDataModel
+from ...utils.pydantic_models import TableContentModel, TableCellContentModel, TableMetaDataModel, TableContentArrayModel
 from .page_element import PageElement
 from .llm_extractor import GPTLayoutElementExtractor, GPT_TOOL_FUNCTIONS
 from PIL import Image
@@ -23,10 +23,10 @@ class Table(PageElement):
         self.fitz_page = fitz_page
         self.plumber_page = plumber_page
         self.method = method
-        self.content: TableContentModel = None
+        self.content: TableContentArrayModel = None
 
     @classmethod
-    def extract_table_plumber(cls, plumber_page: pdfplumber.page, clip = None) -> List[TableContentModel]:
+    def extract_table_plumber(cls, plumber_page: pdfplumber.page, clip = None) -> TableContentArrayModel:
         """_summary_
 
         Args:
@@ -68,15 +68,15 @@ class Table(PageElement):
                 if current_row:
                     table_rows.append(current_row)
 
-                tables.append(TableContentModel(metadata=table_metadata, rows=table_rows))
+                tables.append(TableContentModel(metadata=table_metadata.model_dump(), rows=[[cell.model_dump() for cell in row] for row in table_rows]))
                 #tables.append(table_text)
             
-            return tables
+            return TableContentArrayModel(table_contents=[table.model_dump() for table in tables])
         else:
             return []
 
     @classmethod
-    def extract_table_llm(cls, fitz_page: fitz.Page, clip = None) -> List[TableContentModel]:
+    def extract_table_llm(cls, fitz_page: fitz.Page, clip = None, custom_jinja_prompt=None) -> TableContentArrayModel:
         table_im = pdf_to_im(fitz_page, cropbbox=clip)
 
         words = fitz_page.get_textpage(clip=clip).extractWORDS()
@@ -84,7 +84,7 @@ class Table(PageElement):
 
         gpt_extractor = GPTLayoutElementExtractor()
         try:
-            tables = gpt_extractor.extract_content(GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT, table_im, words_arr=words)
+            tables = gpt_extractor.extract_content(GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT, table_im, words_arr=words, custom_jinja_prompt=custom_jinja_prompt)
         except Exception as e:
             print('Exception occured when extracting table data with llm: ', e)
             tables = []
@@ -129,7 +129,7 @@ class Table(PageElement):
         return potential_tables
 
 
-    def get_content(self) -> List[TableContentModel]:
+    def get_content(self) -> TableContentArrayModel:
 
         if self.content is None:
             if self.method == 'pdfplumber':
@@ -145,7 +145,7 @@ class Table(PageElement):
     def as_markdown_str(self) -> str:
         """ Convert table content into a markdown string.
         """
-        content = self.get_content()
+        content: TableContentArrayModel = self.get_content()
 
         if not content:
             print("No content found.")
@@ -153,7 +153,7 @@ class Table(PageElement):
 
         # Generate the markdown for each table
         markdown_tables = []
-        for table in content:
+        for table in content.table_contents:
             markdown_tables.append(table.to_markdown(render_meta_data=False))
 
         print(f"Generated markdown tables: {markdown_tables}")

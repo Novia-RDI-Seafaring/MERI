@@ -1,9 +1,10 @@
 import openai
 import deepdoctection as dd
 from PIL import Image
-from ...utils import chat_completion_request, pil_to_base64, generate_table_extraction_prompt, generate_tsr_prompt
-from ...utils.pydantic_models import TableContentModel, TableContentArrayModel
-from ...utils import TableStructureModel
+from .llm_utils import chat_completion_request
+from .utils import pil_to_base64
+from .prompts import generate_table_extraction_prompt, generate_tsr_prompt
+from .pydantic_models import TableContentModel, TableContentArrayModel, TableStructureModel
 import os
 from enum import Enum
 from typing import List
@@ -17,29 +18,26 @@ class GPT_TOOL_FUNCTIONS(Enum):
     EXTRACT_TABLE_CONTENT = 'extract_table_content'
     EXTRACT_TABLE_STRUCTURE = 'extract_table_structure'
 
-
-class GPTLayoutElementExtractor:
+class GPTExtractor:
 
     def __init__(self, api_key: str = None) -> None:
         if api_key is None:
             api_key = os.getenv("OPENAI_API_KEY")
         self.client = openai.Client(api_key=api_key)
     
-    def extract_content(self, tool_func: GPT_TOOL_FUNCTIONS, pil_im: Image, words_arr, custom_jinja_prompt=None) -> TableContentArrayModel:
+    def extract_content(self, tool_func: GPT_TOOL_FUNCTIONS, pil_im: Image, words_arr, custom_jinja_prompt=None):
         """ uses multimodal gpt to extract information from an layout element. Leverages
         gpt function calls to force gpt response to follow a certain schema.
 
         tool_func: function_name of function in tools array that should be applied
         pil_im: pil image of the layout element. Is passed to gpt alongside the prompt
         words_arr: [(x0,y0,x1,y1,word), ...] words in the pil image
-
+meri/transformation/elements/llm_extractor.py
         Returns:
             List of TableContentModel: List of TableContentModel instances. one pil_im might contain multiple tables
         """
-
         
         if custom_jinja_prompt:
-            print('Custom prompt')
             prompt = custom_jinja_prompt.render(words_arr=words_arr)
         else:
             # select prompt in dependence to layout type

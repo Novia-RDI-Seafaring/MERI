@@ -30,7 +30,7 @@ class DocumentTransformer:
 
     def transform_to(self, format: Format):
         
-        if format.value == Format.MARKDOWN.value:
+        if format == Format.MARKDOWN.value:
             page_markdowns: List[str] = []
             for page_transformer in self.pages:
                 page_markdowns.append(page_transformer.to_markdown())

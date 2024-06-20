@@ -1,7 +1,8 @@
-from ...utils import pil_to_base64, pdf_to_im
+from ...utils import GPTExtractor, GPT_TOOL_FUNCTIONS
+from ...utils import pil_to_base64, pdf_to_im #pil_to_base64, pdf_to_imm
 from ...utils.pydantic_models import TableContentModel, TableCellContentModel, TableMetaDataModel, TableContentArrayModel
 from .page_element import PageElement
-from .llm_extractor import GPTLayoutElementExtractor, GPT_TOOL_FUNCTIONS
+#from .old_llm_extractor import GPTLayoutElementExtractor, GPT_TOOL_FUNCTIONS
 from PIL import Image
 import pdfplumber.page
 import fitz
@@ -82,7 +83,7 @@ class Table(PageElement):
         words = fitz_page.get_textpage(clip=clip).extractWORDS()
         words = [w[:5] for w in words]
 
-        gpt_extractor = GPTLayoutElementExtractor()
+        gpt_extractor = GPTExtractor() #GPTLayoutElementExtractor()
         try:
             tables = gpt_extractor.extract_content(GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT, table_im, words_arr=words, custom_jinja_prompt=custom_jinja_prompt)
         except Exception as e:

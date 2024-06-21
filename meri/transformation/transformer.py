@@ -30,12 +30,12 @@ class DocumentTransformer:
 
     def transform_to(self, format: Format):
         
-        if format == Format.MARKDOWN:
+        if format == Format.MARKDOWN.value:
             page_markdowns: List[str] = []
             for page_transformer in self.pages:
                 page_markdowns.append(page_transformer.to_markdown())
 
-            return ' '.join(page_markdowns)
+            return "\n\n".join(page_markdowns)
         
         else:
             print(format)
@@ -104,7 +104,7 @@ class PageTransformer:
             elif isinstance(element, Table):
                 markdown_strs.append(element.as_markdown_str())
        
-        return ' '.join(markdown_strs)
+        return "\n\n".join(markdown_strs)
 
     # def get_content(self):
     #     """ Combines matched elements and unmatched text blocks and sorts it by reading order

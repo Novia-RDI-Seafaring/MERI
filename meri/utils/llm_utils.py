@@ -5,7 +5,7 @@ def chat_completion_request(client, messages, tools=None, tool_choice=None, mode
             messages=messages,
             tools=tools,
             tool_choice=tool_choice,
-            max_tokens=4000
+            max_tokens=4096
         )
         return response
     except Exception as e:

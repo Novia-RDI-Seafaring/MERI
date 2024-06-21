@@ -8,17 +8,36 @@ from evaluation.datasets import TableDataset
 from evaluation.utils import parse_table_csv, store_table_csv, store_as_pickle, load_pickle
 from meri.transformation.elements.table import Table as MeriTable
 from meri.utils import pdf_to_im
+from meri.utils.pydantic_models import TableContentModel
 from typing import List
 import tqdm
 from pathlib import Path
 import pickle
 
+
 def perfect_match(pred: str, gt: str):
     """ apply strip to remove spaces at beginning and end of string.
     """
 
-    return pred.strip() == gt.strip()
+    def normalize_string(s, equivalence_map):
+        s = s.strip()
 
+        # Check if the string matches any key in the equivalence map
+        for key, value in equivalence_map.items():
+            if s == key:
+                return value
+        
+        # remove punctuation in end
+        s = s.rstrip(".,:")
+
+        return s
+
+    equiv_table = {
+        'NaN': '',
+        '-': ''
+    }
+
+    return normalize_string(pred.strip(), equivalence_map=equiv_table) == normalize_string(gt.strip(), equivalence_map=equiv_table)
 
 class TableEvaluator:
 
@@ -35,7 +54,8 @@ class TableEvaluator:
         # list of evaluation criteria to use
         self.extraction_method = extraction_method
 
-
+    '''
+    
     @classmethod
     def compare_table(cls, table_pred: List[List], table_gt: List[List], criteria):
         """Compares cells of two tables. 
@@ -94,7 +114,7 @@ class TableEvaluator:
         }
         
         return res
-
+        '''
 
 
     def evaluate(self, existsOk=True):
@@ -113,8 +133,8 @@ class TableEvaluator:
         """
 
         table_results = []
-
-        for fitz_page, plumber_page, bbox, table_gt, ref in tqdm.tqdm(TableDataset(self.annotations_path, self.pdfs_path, self.ann_json_name)):
+        dataset = TableDataset(self.annotations_path, self.pdfs_path, self.ann_json_name)
+        for fitz_page, plumber_page, bbox, table_gt, ref in tqdm.tqdm(dataset, total=dataset.n):
 
             res_path = os.path.join(self.res_dir, 'table_extraction', self.extraction_method, 'pred_{}_{}_{}.pickle'.format(
                 Path(ref['file']).stem, ref["page_id"], ref["table_id"]))
@@ -123,29 +143,32 @@ class TableEvaluator:
             
             try:
                 if res_exists and existsOk:
-                    table_pred = load_pickle(res_path)
+                    table_pred: TableContentModel = TableContentModel.from_pickle(res_path) #load_pickle(res_path)
                     print('Loaded cached results from {}'.format(res_path))
                 else:
                     # extract data according to method
                     if self.extraction_method == 'llm':
-                        table_pred = MeriTable.extract_table_llm(fitz_page, clip=bbox)
+                        table_pred: List[TableContentModel] = MeriTable.extract_table_llm(fitz_page, clip=bbox)
                     elif self.extraction_method == 'pdfplumber':
 
-                        table_pred = MeriTable.extract_table_plumber(plumber_page, clip=bbox)
+                        table_pred: List[TableContentModel] = MeriTable.extract_table_plumber(plumber_page, clip=bbox)
                     else:
                         raise NotImplementedError
 
                     assert len(table_pred) <= 1
-                    table_pred = table_pred[0] if len(table_pred)>0 else []
-                    store_as_pickle(table_pred, res_path)
+
+                    table_pred: TableContentModel = table_pred[0] if len(table_pred)>0 else []
+                    table_pred.to_pickle(res_path) #store_as_pickle(table_pred, res_path)
                     print('Stored extracted table at: {}'.format(res_path))
 
-                table_res = self.compare_table(table_pred, table_gt, self.criteria)
+                table_res = table_pred.compare_to(table_gt, criteria=self.criteria) #self.compare_table(table_pred, table_gt, self.criteria)
                 table_res['ref'] = ref
+                table_res['extraction_method'] = self.extraction_method
                 table_results.append(table_res)
 
             except Exception as e:
                 print('Error occured while extracting tablular data from {}: {}'.format(ref, e))
+            print('acc: {}'.format(table_res['acc']))
 
         overall_res = {
             'total_tables': 0,

@@ -13,7 +13,7 @@ class Figure(PageElement):
     def __init__(self, pdf_bbox: Tuple[float,float,float,float], im: Image, fitz_page: fitz.Page, plumber_page: pdfplumber.page) -> None:
         """ Stores an image of the figure
         """
-        super().__init__(pdf_bbox)
+        super().__init__(pdf_bbox, fitz_page.number)
         self.detectiion_im = im
         self.fitz_page = fitz_page
         self.plumber_page = plumber_page

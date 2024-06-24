@@ -6,7 +6,7 @@ class TextBlock(PageElement):
     """ Class representing basic building elements of the pdf. pdf.get_text_blocks results in list of textblocks
     """
 
-    def __init__(self, pdf_bbox, block_no, text_page: fitz.TextPage) -> None:
+    def __init__(self, pdf_bbox, block_no, text_page: fitz.TextPage, page_idx) -> None:
         '''
         text_page: enables extraction of arbitrary detail of information for text 
             https://pymupdf.readthedocs.io/en/latest/textpage.html#textpage. 
@@ -14,7 +14,7 @@ class TextBlock(PageElement):
             like font, size, etc
 
         '''
-        super().__init__(pdf_bbox)
+        super().__init__(pdf_bbox, page_idx)
 
         self.seqno = block_no # determines reading order
         self.text_page = text_page

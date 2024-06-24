@@ -6,12 +6,13 @@ class PageElement(ABC):
     """ Base class for all content elements
     """
 
-    def __init__(self, pdf_bbox: Tuple[float,float,float,float], seqno=None) -> None:
+    def __init__(self, pdf_bbox: Tuple[float,float,float,float], page_idx, seqno=None) -> None:
         from .textblock import TextBlock
 
         self.pdf_bbox = pdf_bbox
         self.seqno = seqno
         self.children: List[TextBlock] = []
+        self.page_idx = page_idx
         self.content = None
     
     @abstractmethod

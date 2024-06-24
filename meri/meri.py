@@ -55,15 +55,8 @@ class MERI:
             raise NotImplementedError
 
         jsonExtractor = JsonExtractor(intermediate_format=format_handler, **self.extractor_config['KWARGS'])
-        prompt = f""" 
-        You are expert in understanding technical information from documents. You are provided with 
-        a document as markdown and are required to extract specific information from the document.
-
-        document as markdown: {intermediate_format}
-
-        Return the results as JSON.
-        """
-        res = jsonExtractor.populate_schema(json_schema_string=json_schema_string,custom_prompt=prompt)
+        
+        res = jsonExtractor.populate_schema(json_schema_string=json_schema_string)
         return res
     
     def run(self, json_schema_string):

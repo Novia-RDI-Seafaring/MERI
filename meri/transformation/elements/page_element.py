@@ -20,13 +20,13 @@ class PageElement(ABC):
         """ Returns content of content element. e.g. for text the text, for tables the table information in some format, e.g. dataframe
         """
         pass
-
+    
     @abstractmethod
     def as_markdown_str(self):
         """ Convert elements content into markdown. returns markdown string
         """
         pass
-    
+
     def get_order(self):
         """ Returns position in reading order. low = comes first , high = later
         """
@@ -43,7 +43,16 @@ class PageElement(ABC):
         """ Add childelements.
         """
         self.children += elements
+    
+    @property
+    def bbox_html_comment(self) -> str:
+        """_summary_
 
+        Returns:
+            str: Bounding box of page element as html comment string. 
+        """
+        return f"<!-- Bounding box (x0,y0,x1,y1): {self.pdf_bbox} -->"
+    
     @property
     def outer_bbox(self):
         """We assume that all textblocks that are overlapping with the detected bbox, should actually be contained in the bbox. 

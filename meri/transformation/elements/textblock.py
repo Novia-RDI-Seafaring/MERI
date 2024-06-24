@@ -24,12 +24,12 @@ class TextBlock(PageElement):
         self.text_type = None 
 
     def as_markdown_str(self):
-        """ Converts text to markdown. Textblocks might have text_type property
+        """ Converts text to markdown. Textblocks might have text_type property. Adds bbox of element as html comment to markdown string
         """
         content = self.get_content()
         
         if self.text_type is None:
-            return '<br/> {} <br/>'.format(content)
+            return '<br/>{} {} <br/>'.format(self.bbox_html_comment, content)
         
         text_type_list = self.text_type.split('_')
 
@@ -42,7 +42,7 @@ class TextBlock(PageElement):
             return markdown_str
         
         else:
-            return '<br/> {} <br/>'.format(content)
+            return '<br/>{} {} <br/>'.format(self.bbox_html_comment, content)
         
 
     def text(self):

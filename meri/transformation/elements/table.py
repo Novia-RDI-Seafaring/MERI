@@ -149,7 +149,7 @@ class Table(PageElement):
         return self.content
 
     def as_markdown_str(self) -> str:
-        """ Convert table content into a markdown string.
+        """ Convert table content into a markdown string. Adds bbox of table element as html comment to markdown string
         """
         content: TableContentArrayModel | Image.Image = self.get_content()
 
@@ -160,7 +160,7 @@ class Table(PageElement):
         # if table is converted to image, just return base64 encoding
         if self.method == 'toimage':
             image_base64 = pil_to_base64(content)
-            return f'![Figure](data:image/png;base64,{image_base64})'
+            return f'![Figure(]data:image/png;base64,{image_base64})'
         
         # Generate the markdown for each table
         markdown_tables = []
@@ -168,7 +168,7 @@ class Table(PageElement):
             markdown_tables.append(table.to_markdown(render_meta_data=False))
 
         print(f"Generated markdown tables: {markdown_tables}")
-        return "\n\n".join(markdown_tables+['<br/>'])
+        return "{}".format(self.bbox_html_comment) + "\n\n".join(markdown_tables+['<br/>'])
 
     @property
     def outer_image(self):

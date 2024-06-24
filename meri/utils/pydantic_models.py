@@ -75,6 +75,11 @@ class TableContentModel(BaseModel):
         return cls.model_validate(model_dict)
 
     def to_matrix_str(self):
+        """Adds bbox of each cell as html comment to cell string
+
+        Returns:
+            _type_: _description_
+        """
 
         # Determine the number of columns by considering colspan
         max_cols = 0
@@ -96,7 +101,7 @@ class TableContentModel(BaseModel):
                     for c in range(cell.colspan):
                         if row_idx + r < len(table_matrix) and col_idx + c < max_cols:
                             # empty cell as html block https://stackoverflow.com/questions/17536216/create-a-table-without-a-header-in-markdown
-                            table_matrix[row_idx + r][col_idx + c] = cell.text.strip() if cell.text != 'NaN' else ''
+                            table_matrix[row_idx + r][col_idx + c] = "{} {} ".format(f"<!-- Bounding box (x0,y0,x1,y1): {cell.bbox} -->", cell.text.strip() if cell.text != 'NaN' else '') 
                 
                 col_idx += cell.colspan
 
@@ -187,30 +192,7 @@ class TableContentModel(BaseModel):
 
         header_row_idx = None
         table_matrix = self.to_matrix_str()
-        '''
-        # Create a matrix to hold the final table structure with spans considered
-        table_matrix = [["" for _ in range(max_cols)] for _ in range(len(rows) + sum(cell.rowspan - 1 for row in rows for cell in row))]
-        header_row_idx = None
-
-        # Fill the table matrix with cell content considering rowspan and colspan
-        for row_idx, row in enumerate(rows):
-            col_idx = 0
-            for cell in row:
-                while col_idx < max_cols and table_matrix[row_idx][col_idx]:
-                    col_idx += 1
-
-                for r in range(cell.rowspan):
-                    for c in range(cell.colspan):
-                        if row_idx + r < len(table_matrix) and col_idx + c < max_cols:
-                            # empty cell as html block https://stackoverflow.com/questions/17536216/create-a-table-without-a-header-in-markdown
-                            table_matrix[row_idx + r][col_idx + c] = cell.text if cell.text != 'NaN' else '<!-- -->'
-                
-                col_idx += cell.colspan
-
-            # Identify the header row
-            if header_row_idx is None and any(cell.isheader for cell in row):
-                header_row_idx = row_idx
-        '''
+        
         for row in table_matrix:
             for cell in row:
                 if cell == 'NaN' or cell == '':

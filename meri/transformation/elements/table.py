@@ -1,12 +1,15 @@
+import PIL.Image
 from ...utils import GPTExtractor, GPT_TOOL_FUNCTIONS
 from ...utils import pil_to_base64, pdf_to_im #pil_to_base64, pdf_to_imm
 from ...utils.pydantic_models import TableContentModel, TableCellContentModel, TableMetaDataModel, TableContentArrayModel
 from .page_element import PageElement
 #from .old_llm_extractor import GPTLayoutElementExtractor, GPT_TOOL_FUNCTIONS
 from PIL import Image
+import PIL
 import pdfplumber.page
 import fitz
-from typing import Tuple, List, Dict
+import numpy as np
+from typing import Tuple, List, Dict, Union
 
 class Table(PageElement):
     """ Content class for Table elements.
@@ -19,7 +22,7 @@ class Table(PageElement):
         - page: fitz Page, helpful when applying find_tables methods from fitz library. clip page to pdf_bbox for table extraction
                 based on pdf.
         """
-        super().__init__(pdf_bbox)
+        super().__init__(pdf_bbox, fitz_page.number)
         self.detectiion_im = im
         self.fitz_page = fitz_page
         self.plumber_page = plumber_page
@@ -130,13 +133,15 @@ class Table(PageElement):
         return potential_tables
 
 
-    def get_content(self) -> TableContentArrayModel:
+    def get_content(self) -> TableContentArrayModel | Image.Image:
 
         if self.content is None:
             if self.method == 'pdfplumber':
                 self.content = self.extract_table_plumber(self.plumber_page, clip=self.outer_bbox)
             elif self.method == 'llm':
                 self.content = self.extract_table_llm(self.fitz_page, clip=self.outer_bbox)
+            elif self.method == 'toimage':
+                self.content = self.outer_image
             else:
                 raise NotImplementedError
         else:
@@ -146,12 +151,17 @@ class Table(PageElement):
     def as_markdown_str(self) -> str:
         """ Convert table content into a markdown string.
         """
-        content: TableContentArrayModel = self.get_content()
+        content: TableContentArrayModel | Image.Image = self.get_content()
 
         if not content:
             print("No content found.")
             return ""
 
+        # if table is converted to image, just return base64 encoding
+        if self.method == 'toimage':
+            image_base64 = pil_to_base64(content)
+            return f'![Figure](data:image/png;base64,{image_base64})'
+        
         # Generate the markdown for each table
         markdown_tables = []
         for table in content.table_contents:

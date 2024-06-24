@@ -92,7 +92,7 @@ class MarkdownHandler(BasicFormatHandler):
 
         current_chunk = []
         character_counter = 0
-        for (type, cont) in markdown_parts:
+        for i, (type, cont) in enumerate(markdown_parts):
             if type == 'text':
                 current_chunk.append((type, cont))
                 character_counter += len(cont)
@@ -100,8 +100,9 @@ class MarkdownHandler(BasicFormatHandler):
                 current_chunk.append((type, cont))
             else:
                 current_chunk.append((type, cont))
-
-            if character_counter >= character_threshold:
+            
+            # chunk complete if character threshold reached OR no more markdown parts left
+            if character_counter >= character_threshold or i == len(markdown_parts)-1:
                 chunks.append(current_chunk)
 
                 # always add previous markdown part as overlap
@@ -137,6 +138,12 @@ class MarkdownHandler(BasicFormatHandler):
                 raise NotImplementedError
         
         return message_contents
+
+    def save(self, path):
+
+        with open(path, 'w') as md_file:
+            md_file.write(self.markdown_str)
+        
 
 class HTMLHandler(BasicFormatHandler):
 

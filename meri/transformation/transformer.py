@@ -28,7 +28,7 @@ class DocumentTransformer:
     def unmatched_text_blocks(self):
         return list(itertools.chain(*[page.unmatched_text_blocks for page in self.pages]))
 
-    def transform_to(self, format: Format):
+    def transform_to(self, format: str):
         
         if format == Format.MARKDOWN.value:
             page_markdowns: List[str] = []
@@ -87,7 +87,7 @@ class PageTransformer:
         for (x0, y0, x1, y1, _, block_no, block_type) in text_blocks:
             bbox = [x0,y0,x1,y1]
             textpage = page.get_textpage(clip=bbox)
-            content.append(TextBlock(bbox, block_no, textpage))
+            content.append(TextBlock(bbox, block_no, textpage, page.number))
 
         return content
 

@@ -11,16 +11,35 @@ class TablePlumberComponent(dd.PipelineComponent):
 
         source_height, source_width = dp.pdfplumber_page.height, dp.pdfplumber_page.width
         target_height, target_width, _ = dp._image.shape
+        
+        detected_boxes = [] # List to store detected boxes
 
+        # # Function to handle detection results
+        # def handle_detection_result(bbox):
+        #     scaled_bbox = scale_coords(bbox, source_height, source_width, target_height, target_width)
+        #     detect_results = dd.DetectionResult(
+        #         box=scaled_bbox,
+        #         class_name=dd.LayoutType.table, # Table class
+        #         class_id=0
+        #     )
+        #     self.dp_manager.set_image_annotation(detect_results)
+        #     detected_boxes.append(scaled_bbox) # Append the scaled bbox to the list
+        
         # Function to handle detection results
         def handle_detection_result(bbox):
             scaled_bbox = scale_coords(bbox, source_height, source_width, target_height, target_width)
-            detect_results = dd.DetectionResult(
-                box=scaled_bbox,
-                class_name=dd.LayoutType.table, # Table class
-                class_id=0
-            )
-            self.dp_manager.set_image_annotation(detect_results)
+            # Check for overlaps with existing detections before adding new ones
+            if not self.is_overlapping(scaled_bbox, detected_boxes):
+                detect_results = dd.DetectionResult(
+                    box=scaled_bbox,
+                    class_name=dd.LayoutType.table,
+                    class_id=0
+                )
+                self.dp_manager.set_image_annotation(detect_results)
+                detected_boxes.append(scaled_bbox)
+            else:
+                print(f"Skipped overlapping table: {scaled_bbox}")
+
 
         # First use the built-in find_tables method
         tables = dp.pdfplumber_page.find_tables(
@@ -40,6 +59,28 @@ class TablePlumberComponent(dd.PipelineComponent):
             bottom = max(block['bottom'] for block in table)
             handle_detection_result((x0, top, x1, bottom))
 
+    # Function to check if new_box overlaps with existing_boxes
+    def is_overlapping(self, new_box, existing_boxes, threshold=0.1):
+        # Check if new_box overlaps with any existing_box more than threshold percentage
+        for box in existing_boxes:
+            # Calculate intersection over union (IoU) here, and compare with threshold
+            if self.calculate_iou(new_box, box) > threshold:
+                return True
+        return False
+    
+    # Function to calculate Intersection over Union (IoU) and check for overlap
+    def calculate_iou(self, box1, box2):
+        # Calculate the Intersection over Union (IoU) of two bounding boxes.
+        x1_max = max(box1[0], box2[0])
+        y1_max = max(box1[1], box2[1])
+        x2_min = min(box1[2], box2[2])
+        y2_min = min(box1[3], box2[3])
+
+        inter_area = max(0, x2_min - x1_max) * max(0, y2_min - y1_max)
+        box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
+        box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
+        iou = inter_area / float(box1_area + box2_area - inter_area)
+        return iou
     
     def extract_potential_tables(self, page):
         '''

@@ -1,7 +1,7 @@
 import json
 from typing import List, Tuple
 import fitz
-from layout_eval.utils import coco_to_xyxy, rescale_bbox
+from layout_eval.utils import coco_to_xyxy, rescale_bbox, add_noise_to_bbox, add_noise_to_detected_bboxes
 
 
 class LayoutEvaluator:
@@ -19,6 +19,15 @@ class LayoutEvaluator:
         return ground_truth_bboxes
 
     def extract_detected_bboxes(self, doc_transformer) -> List[Tuple[int, List[float]]]:
+        """
+        Extracts the detected bounding boxes from the document transformer.
+        
+        Parameters:
+            doc_transformer: The document transformer containing the detected elements.
+            
+        Returns:
+            List of tuple: The detected bounding boxes [(page_number, bbox), ...].
+        """
         detected_bboxes = []
         for page_number in range(len(doc_transformer.pages)):
             page = doc_transformer.pages[page_number]
@@ -27,9 +36,40 @@ class LayoutEvaluator:
                     detected_bboxes.append((page_number + 1, element.pdf_bbox))  # Page number starts from 1
         self.detected_bboxes = detected_bboxes
         return detected_bboxes
+    
+    def extract_noisy_detected_bboxes(self, doc_transformer, noise_level=0.05):
+        """
+        Extracts and adds noise to the detected bounding boxes.
+        
+        Parameters:
+            doc_transformer: The document transformer containing the detected elements.
+            noise_level (float): The noise level to add to the detected bounding boxes.
+            
+        Returns:
+            List of tuple: The detected bounding boxes with added noise.
+        """
+        detected_bboxes = []
+        for page_number in range(len(doc_transformer.pages)):
+            page = doc_transformer.pages[page_number]
+            for element in page.elements:
+                if hasattr(element, 'pdf_bbox'):
+                    detected_bboxes.append((page_number + 1, element.pdf_bbox))  # Page number starts from 1
+        noisy_detected_bboxes = add_noise_to_detected_bboxes(detected_bboxes, noise_level)
+        self.detected_bboxes = noisy_detected_bboxes
+        return noisy_detected_bboxes
 
     @staticmethod
     def bbox_intersection_area(boxA, boxB):
+        """
+        Calculates the area of intersection between two bounding boxes.
+        
+        Parameters:
+            boxA (list): The first bounding box in [x1, y1, x2, y2] format.
+            boxB (list): The second bounding box in [x1, y1, x2, y2] format.
+            
+        Returns:
+            float: The area of intersection between the two bounding boxes.   
+        """
         xA = max(boxA[0], boxB[0])
         yA = max(boxA[1], boxB[1])
         xB = min(boxA[2], boxB[2])
@@ -41,18 +81,36 @@ class LayoutEvaluator:
 
     @staticmethod
     def bbox_union_area(boxA, boxB, intersection_area):
+        """
+        Calculates the area of union between two bounding boxes.
+        
+        Parameters:
+            boxA (list): The first bounding box in [x1, y1, x2, y2] format.
+            boxB (list): The second bounding box in [x1, y1, x2, y2] format.
+            intersection_area (float): The area of intersection between the two bounding boxes.
+            
+        Returns:
+            float: The area of union between the two bounding boxes.
+        """
         areaA = (boxA[2] - boxA[0]) * (boxA[3] - boxA[1])
         areaB = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
         return areaA + areaB - intersection_area
 
     def compare_bounding_boxes(self):
+        """
+        Compares the detected bounding boxes with the ground truth bounding boxes.
+        
+        Returns:
+            tuple: The overlapping bounding boxes and the comparison results.
+        """
         rescaled_detected_bboxes = []
         doc = fitz.open(self.pdf_path)
         for bbox in self.detected_bboxes:
             page_number = bbox[0]
             page = doc.load_page(page_number - 1)
             new_scale = page.rect.width, page.rect.height
-            rescaled_bbox = rescale_bbox(bbox[1], old_scale=new_scale, new_scale=new_scale)
+            # rescaled_bbox = rescale_bbox(bbox[1], old_scale=new_scale, new_scale=new_scale)
+            rescaled_bbox = bbox[1]
             rescaled_detected_bboxes.append((page_number, rescaled_bbox))
 
         comparison_results = []
@@ -60,7 +118,7 @@ class LayoutEvaluator:
         # Use a set to keep track of matched ground truth boxes to avoid duplicate matches
         matched_gt_boxes = set()
 
-        for pdf_box in rescaled_detected_bboxes:
+        for pdf_box in self.detected_bboxes: # rescaled_detected_bboxes:
             pdf_page_num = pdf_box[0]
             pdf_bbox = pdf_box[1]
             best_iou = 0

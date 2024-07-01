@@ -76,8 +76,12 @@ def add_noise_to_detected_bboxes(detected_bboxes, noise_level=0.05):
     return noisy_bboxes
 
 
-def visualize_bboxes_on_pdf(pdf_path: str, ground_truth_bboxes: List[Tuple[int, List[float]]], detected_bboxes: List[Tuple[int, List[float]]], output_path: str, pages_to_visualize: List[int]):
+def visualize_bboxes_on_pdf(pdf_path: str, ground_truth_bboxes: List[Tuple[int, List[float]]], detected_bboxes: List[Tuple[int, List[float]]], output_path: str, pages_to_visualize: List[int] = None):
     doc = fitz.open(pdf_path)
+    
+    if pages_to_visualize is None or len(pages_to_visualize) == 0:
+        pages_to_visualize = list(range(1, len(doc) + 1))
+    
     for page_number in pages_to_visualize:
         page = doc.load_page(page_number - 1)  # Page number correction
         new_scale = page.rect.width, page.rect.height  # Get the width and height of the fitz page

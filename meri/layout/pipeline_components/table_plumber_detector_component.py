@@ -2,6 +2,46 @@ import deepdoctection as dd
 from typing import List
 from .utils import scale_coords, ProcessingService
 
+# https://stackoverflow.com/questions/76584489/pdfplumber-python-extract-tables-setting-for-the-specific-strategy
+# https://github.com/jsvine/pdfplumber
+def is_potential_table(text_blocks):
+        '''
+        Determines if a list of text blocks resembles a table structure.
+        Args:
+            text_blocks: list of text blocks
+        Returns:
+            bool: True if the text blocks resemble a table, False otherwise
+        '''
+        if len(text_blocks) < 4:
+            return False
+        
+        # Check alignment and spacing patterns
+        alignment_tolerance = 5 # text blocks that are within 5 units of each other horizontally are considered to be in the same column.
+        column_positions = {} # Dictionary to store the number of text blocks aligned at each position.
+        
+        # Count the number of text blocks aligned at each position, and Group text blocks based on their horizontal positions (x0).
+        for block in text_blocks:
+            col_position = block['x0']
+            column_found = False
+            # Check if the block is close to any existing column position
+            for pos in column_positions:
+                # checks if the horizontal positions (x0 values) are identical or close to each other
+                if abs(pos - col_position) < alignment_tolerance:
+                    column_positions[pos] += 1
+                    column_found = True
+                    break
+            # If no close column position found, add a new column position
+            if not column_found:
+                column_positions[col_position] = 1
+
+        # Consider it a table if there are multiple text blocks aligned vertically
+        num_columns = len([count for count in column_positions.values() if count > 1])
+        
+        # Additional density check: tables usually have fewer words per block on average
+        average_words_per_block = sum(len(block['text'].split()) for block in text_blocks) / len(text_blocks)
+        
+        return num_columns > 1 and average_words_per_block < 5
+
 class TablePlumberComponent(dd.PipelineComponent):
     def __init__(self):
         super().__init__(name=self.__class__.__name__)
@@ -104,15 +144,15 @@ class TablePlumberComponent(dd.PipelineComponent):
                 current_table.append(block)
             else:
                 # If the current block is far from the last one vertically, consider it a new table
-                if len(current_table) > 3:
+                if len(current_table) > 3 and is_potential_table(current_table): # NEW - Check if the current table is a potential table
                     potential_tables.append(current_table)
                 current_table = [block]
         # Check the last accumulated table
-        if len(current_table) > 3:
+        if len(current_table) > 3 and is_potential_table(current_table): # NEW - Check if the current table is a potential table
             potential_tables.append(current_table)
         
         return potential_tables
- 
+    
 
     def get_meta_annotation(self):
         return dict([

@@ -1,19 +1,39 @@
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.getcwd(), os.pardir, "meri")))
+# sys.path.append(os.path.abspath(os.path.join(os.getcwd(), os.pardir, "meri")))
+base_path = os.path.abspath(os.path.join(os.getcwd(), '../../MERI'))
+sys.path.append(base_path)
+print(base_path)
 
 import gradio as gr
 from PIL import Image
+
 import deepdoctection as dd
 from meri.layout.pipeline_components import (AddPDFInfoComponent, 
                         DummyDetectorComponent, 
                         LayoutDetectorComponent,
                         OCRComponent,
-                        ImageDetectorComponent,
                         DrawingsDetectorComponent,
-                        TablePlumberComponent,
-                        TableDetectorComponent)
+                        ImageDetectorComponent,
+                        TableDetectorComponent,
+                        WordUnionComponent,
+                        NMSComponent,
+                        TextDetectorComponent,
+                        TablePlumberComponent)
 from meri.layout.pipeline import Pipeline
+from meri.layout.pipeline_components.utils import ProcessingService, CONFIGS_PATH
+
+
+# import deepdoctection as dd
+# from meri.layout.pipeline_components import (AddPDFInfoComponent, 
+#                         DummyDetectorComponent, 
+#                         LayoutDetectorComponent,
+#                         OCRComponent,
+#                         ImageDetectorComponent,
+#                         DrawingsDetectorComponent,
+#                         TablePlumberComponent,
+#                         TableDetectorComponent)
+# from meri.layout.pipeline import Pipeline
 
 from matplotlib import pyplot as plt 
 import matplotlib
@@ -109,6 +129,24 @@ pipeline_components_map = {
     }
 }
 
+
+intermediary_structure_transformation_pipeline = [
+    'Markdown',
+    'LLMSTableDetector',
+    'PDFPlumberTableDetector',
+]
+
+
+def show_markdown_result():
+    # Simulate processing and showing Markdown result
+    return "# This is the Markdown result"
+
+def show_json_result(json_file):
+    # Simulate processing and showing JSON result
+    # In a real scenario, you would parse and process the JSON file here
+    if json_file is not None:
+        return {"key": "value", "another_key": "another_value"}
+    return None
 
 def select_im(images, annotated_images, page_id):
     if len(annotated_images) != len(images):
@@ -226,30 +264,87 @@ with gr.Blocks(title='Document Layout Analysis') as demo:
                 imm = gr.Image(Image.new('RGB', (1, 1)), show_label=False, container=False, elem_classes="originalImage")
             with gr.Column(visible=False, elem_classes='image_holder') as annotated_image_row:
                 page_slider = gr.Slider(1, 1, value=1, step=1, interactive=True)
-                anIm = gr.Image(show_label=False, container=False)                
+                anIm = gr.Image(show_label=False, container=False)    
+        
+        with gr.Column(elem_id='ControlColumn'):                   
+            with gr.Accordion(label="Layout Analysis Pipeline", open=False):
+                with gr.Column(elem_id='ControlColumn'):
+                    with gr.Row():
+                        gr.Markdown(
+                            """
+                            # Configure Analysis Pipeline
+                            The document layout is analyized through a number of components that are being
+                            executed in sequential order. Select the components the pipeline should contain.
+                            
+                            """
+                        )
 
-        with gr.Column(elem_id='ControlColumn'):
-            with gr.Row():
-                gr.Markdown(
-                    """
-                    # Configure Analysis Pipeline
-                    The document layout is analyized through a number of components that are being
-                    executed in sequential order. Select the components the pipeline should contain.
-                    
-                    """
-                )
+                    with gr.Row():
+                        pipeline_comps = gr.CheckboxGroup([key for (key, comp) in pipeline_components_map.items()],
+                                                            info=' ', label='Pipeline Components')
+                    with gr.Row():
+                        pipeline_btn = gr.Button("Run Pipeline", variant="primary")
 
-            with gr.Row():
-                pipeline_comps = gr.CheckboxGroup([key for (key, comp) in pipeline_components_map.items()],
-                                                     info=' ', label='Pipeline Components')
-            with gr.Row():
-                pipeline_btn = gr.Button("Run Pipeline", variant="primary")
+                    with gr.Row(visible=False) as detectionResRow:
+                        labelsOfInterest = gr.CheckboxGroup([], every=0.5,
+                                                            info='Select elements that should be displaid', label='Detected Layout Elements')
+                        displayLabels = gr.Button("Show Elements", variant="primary")
+                        
+            with gr.Accordion(label="Intermediary Structure Transformation", open=False):
+                with gr.Column(elem_id='ControlColumn'):
+                    with gr.Row():
+                        gr.Markdown(
+                            """
+                            # Intermediary Structure Transformation
+                            This stage involves transforming the document's structure into intermediary formats, 
+                            such as Markdown. These transformations help in structuring the document layout in 
+                            a more readable and organized manner, facilitating further analysis and processing.
 
-            with gr.Row(visible=False) as detectionResRow:
-                labelsOfInterest = gr.CheckboxGroup([], every=0.5,
-                                                     info='Select elements that should be displaid', label='Detected Layout Elements')
-                displayLabels = gr.Button("Show Elements", variant="primary")
+                            """
+                        )
+
+                    with gr.Row():
+                        pipeline_comps = gr.CheckboxGroup(intermediary_structure_transformation_pipeline,
+                                                            info=' ', label='Transformation Components')
+                    with gr.Row():
+                        pipeline_btn = gr.Button("Run Pipeline", variant="primary")
+
+                    with gr.Row(visible=False) as detectionResRow:
+                        labelsOfInterest = gr.CheckboxGroup([], every=0.5,
+                                                            info='Select elements that should be displaid', label='Detected Layout Elements')
+                        displayLabels = gr.Button("Show Elements", variant="primary")
             
+            with gr.Accordion(label="Parameter Extraction", open=False):
+                with gr.Column():
+                    with gr.Row():
+                        gr.Markdown(
+                            """
+                            # Configure Parameter Extraction
+                            The parameters are extracted from the document based on the provided JSON configuration.
+                            """
+                        )
+
+                    with gr.Row():
+                        json_input = gr.File(label="JSON Configuration")
+                    with gr.Row():
+                        extract_btn = gr.Button("Extract Parameters", variant="primary")
+
+                    with gr.Row(visible=False) as extractionResRow:
+                        extraction_labels = gr.CheckboxGroup([], every=0.5,
+                                                             info='Select parameters to display', label='Extracted Parameters')
+                        displayExtraction = gr.Button("Show Parameters", variant="primary")
+                        
+            # Adding the Markdown result display
+            with gr.Column():
+                with gr.Row():
+                    markdown_result = gr.Markdown(label="Markdown Result", visible=False)
+
+            # Adding the JSON result display
+            with gr.Column():
+                with gr.Row():
+                    json_result = gr.JSON(label="JSON Parameter Result", visible=False)
+
+
 
         page_slider.change(select_im, inputs=[images, annotated_images, page_slider], outputs=[anIm] )
 

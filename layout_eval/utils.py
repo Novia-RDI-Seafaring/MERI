@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 from PIL import Image
 from typing import List, Tuple
+import random
 
 
 def coco_to_xyxy(coco_box):
@@ -33,8 +34,54 @@ def rescale_bbox(bbox, old_scale, new_scale):
 
     return [x1_new, y1_new, x2_new, y2_new]
 
-def visualize_bboxes_on_pdf(pdf_path: str, ground_truth_bboxes: List[Tuple[int, List[float]]], detected_bboxes: List[Tuple[int, List[float]]], output_path: str, pages_to_visualize: List[int]):
+
+def add_noise_to_bbox(bbox, noise_level=0.05):
+    """
+    Adds random noise to a bounding box.
+    
+    Parameters:
+        bbox (list of float): The original bounding box [x_min, y_min, x_max, y_max].
+        noise_level (float): The noise level as a fraction of the bounding box dimensions.
+        
+    Returns:
+        list of float: The bounding box with added noise.
+    """
+    x_min, y_min, x_max, y_max = bbox
+    width = x_max - x_min
+    height = y_max - y_min
+
+    noise_x_min = x_min + random.uniform(-noise_level, noise_level) * width
+    noise_y_min = y_min + random.uniform(-noise_level, noise_level) * height
+    noise_x_max = x_max + random.uniform(-noise_level, noise_level) * width
+    noise_y_max = y_max + random.uniform(-noise_level, noise_level) * height
+
+    return [noise_x_min, noise_y_min, noise_x_max, noise_y_max]
+
+
+def add_noise_to_detected_bboxes(detected_bboxes, noise_level=0.05):
+    """
+    Adds noise to all detected bounding boxes.
+    
+    Parameters:
+        detected_bboxes (list of tuple): The original detected bounding boxes [(page_number, bbox), ...].
+        noise_level (float): The noise level as a fraction of the bounding box dimensions.
+        
+    Returns:
+        list of tuple: The detected bounding boxes with added noise.
+    """
+    noisy_bboxes = []
+    for page_number, bbox in detected_bboxes:
+        noisy_bbox = add_noise_to_bbox(bbox, noise_level)
+        noisy_bboxes.append((page_number, noisy_bbox))
+    return noisy_bboxes
+
+
+def visualize_bboxes_on_pdf(pdf_path: str, ground_truth_bboxes: List[Tuple[int, List[float]]], detected_bboxes: List[Tuple[int, List[float]]], output_path: str, pages_to_visualize: List[int] = None):
     doc = fitz.open(pdf_path)
+    
+    if pages_to_visualize is None or len(pages_to_visualize) == 0:
+        pages_to_visualize = list(range(1, len(doc) + 1))
+    
     for page_number in pages_to_visualize:
         page = doc.load_page(page_number - 1)  # Page number correction
         new_scale = page.rect.width, page.rect.height  # Get the width and height of the fitz page
@@ -70,7 +117,7 @@ def visualize_bboxes_on_pdf(pdf_path: str, ground_truth_bboxes: List[Tuple[int, 
         plt.show()
 
       
-def calculate_precision_recall(comparison_results, ground_truth_bboxes, iou_threshold):
+def cal_precision_recall(comparison_results, ground_truth_bboxes, iou_threshold):
     true_positives = sum(1 for result in comparison_results if result['iou'] >= iou_threshold)
     total_detections = len(comparison_results)
     total_annotations = len(ground_truth_bboxes)
@@ -89,7 +136,7 @@ def plot_precision_recall_curve(comparison_results, ground_truth_bboxes, iou_thr
     recalls = []
     
     for threshold in iou_thresholds:
-        precision, recall = calculate_precision_recall(comparison_results, ground_truth_bboxes, threshold)
+        precision, recall = cal_precision_recall(comparison_results, ground_truth_bboxes, threshold)
         precisions.append(precision)
         recalls.append(recall)
     

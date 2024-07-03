@@ -18,7 +18,8 @@ class TablePlumberComponent(dd.PipelineComponent):
             detect_results = dd.DetectionResult(
                 box=scaled_bbox,
                 class_name=dd.LayoutType.table, # Table class
-                class_id=0
+                class_id=0,
+                score=1.0
             )
             self.dp_manager.set_image_annotation(detect_results)
 

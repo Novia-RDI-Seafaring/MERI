@@ -7,6 +7,8 @@ import os
 from typing import Tuple, List, Self
 import pickle
 from pathlib import Path
+import xml.etree.ElementTree as ET
+
 
 class TableMetaDataModel(BaseModel):
     title: str = Field(..., description='Title of the table.')
@@ -15,8 +17,8 @@ class TableMetaDataModel(BaseModel):
 class TableCellContentModel(BaseModel):
     text : str = Field(..., description='content of the cell')
     isheader: bool = Field(..., description='True if cell is a header.')
-    rowspan: int = Field(..., description='number of rows the cell spans over. Same as html table rowspan attribute.')
-    colspan: int = Field(..., description='number of columns the cell spans over. Same as html table colspan attribute.')
+    rowspan: int = Field(default=1, description='number of rows the cell spans over. Same as html table rowspan attribute.')
+    colspan: int = Field(default=1, description='number of columns the cell spans over. Same as html table colspan attribute.')
     bbox: List[float] = Field(..., description='bbox of cells text as coco coordinates.')
 
 class TableContentModel(BaseModel):
@@ -101,8 +103,9 @@ class TableContentModel(BaseModel):
                     for c in range(cell.colspan):
                         if row_idx + r < len(table_matrix) and col_idx + c < max_cols:
                             # empty cell as html block https://stackoverflow.com/questions/17536216/create-a-table-without-a-header-in-markdown
-                            table_matrix[row_idx + r][col_idx + c] = "{} {} ".format(f"<!-- Bounding box (x0,y0,x1,y1): {cell.bbox} -->", cell.text.strip() if cell.text != 'NaN' else '') 
-                
+                            #table_matrix[row_idx + r][col_idx + c] = "{} {} ".format(f"<!-- Bounding box (x0,y0,x1,y1): {cell.bbox} -->", cell.text.strip() if cell.text != 'NaN' else '') 
+                            table_matrix[row_idx + r][col_idx + c] = "{} ".format( cell.text.strip() if cell.text != 'NaN' else '') 
+
                 col_idx += cell.colspan
 
         return table_matrix
@@ -222,3 +225,64 @@ class TableContentArrayModel(BaseModel):
 
 class TableStructureModel(BaseModel):
     textual_description: str = Field(..., description='textual description of the stucutre of the table.')
+
+######################## new ####################
+class TableCellModel(BaseModel):
+    text : str = Field(..., description='content of the cell')
+    row_nums: List[int] = Field(..., description='list of row indices the row spans over. Length of this List equals the row span.')
+    col_nums: List[int] = Field(..., description='list of column indices the column spans over. Length of this List equals the column span.')
+    col_header: bool = Field(..., description='True if cell is column header.')
+    bbox: List[float] = Field(..., description='bbox of cells text as coco coordinates.')
+
+class TableModel2(BaseModel):
+    metadata: TableMetaDataModel = Field(..., description='metadata on the table.')
+    cells: List[TableCellModel] = Field(..., description='list of cells in the table')
+
+    def to_markdown(self, render_meta_data: bool = False):
+
+        return self.to_html()
+
+    def to_html(self):
+        cells = [c.model_dump() for c in self.cells]
+        cells = sorted(cells, key=lambda k: min(k['col_nums']))
+        cells = sorted(cells, key=lambda k: min(k['row_nums']))
+
+        table = ET.Element("table", attrib=self.metadata.model_dump())
+        current_row = -1
+
+        for cell in cells:
+            this_row = min(cell['row_nums'])
+
+            attrib = {}
+            colspan = len(cell['col_nums'])
+            if colspan > 1:
+                attrib['colspan'] = str(colspan)
+            rowspan = len(cell['row_nums'])
+            if rowspan > 1:
+                attrib['rowspan'] = str(rowspan)
+            if this_row > current_row:
+                current_row = this_row
+                if cell['col_header']:
+                    cell_tag = "th"
+                    row = ET.SubElement(table, "thead")
+                else:
+                    cell_tag = "td"
+                    row = ET.SubElement(table, "tr")
+            tcell = ET.SubElement(row, cell_tag, attrib=attrib)
+            tcell.text = cell['text']
+
+        return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))
+    
+    @classmethod
+    def from_tsr_cells(cls, cells):
+
+        return cls(metadata=TableMetaDataModel(title='', description=''),
+                    cells=[TableCellModel(
+                                text=c['cell text'],
+                                row_nums=c['row_nums'],
+                                col_nums=c['column_nums'],
+                                col_header=c['column header'],
+                                bbox=c['bbox']) for c in cells])
+    
+class TableArrayModel2(BaseModel):
+    table_contents: List[TableModel2] = Field(..., description='List of tables.')

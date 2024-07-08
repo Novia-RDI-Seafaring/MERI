@@ -1,8 +1,9 @@
 import PIL.Image
 from ...utils import GPTExtractor, GPT_TOOL_FUNCTIONS
 from ...utils import pil_to_base64, pdf_to_im #pil_to_base64, pdf_to_imm
-from ...utils.pydantic_models import TableContentModel, TableCellContentModel, TableMetaDataModel, TableContentArrayModel
+from ...utils.pydantic_models import TableContentModel, TableCellContentModel, TableMetaDataModel, TableContentArrayModel, TableArrayModel2, TableCellModel, TableModel2
 from .page_element import PageElement
+from ...utils.table_structure_recognizer import TSRBasedTableExtractor
 #from .old_llm_extractor import GPTLayoutElementExtractor, GPT_TOOL_FUNCTIONS
 from PIL import Image
 import PIL
@@ -132,6 +133,18 @@ class Table(PageElement):
 
         return potential_tables
 
+    def extract_tables_tatr(cls, table_im, fitz_page, table_bbox):
+        table_extractor = TSRBasedTableExtractor(tsr_thr=0.85)
+        out_formats, _, _ = table_extractor.cell_based_extract(
+            table_np_im=np.asarray(table_im),
+            pdf_full_fitz_page=fitz_page,
+            table_bbox=table_bbox
+        )
+
+        # only one table
+        tables = [TableModel2.from_tsr_cells(table_cells) for table_cells in out_formats['cells']]
+        return TableArrayModel2(table_contents=tables)
+
 
     def get_content(self) -> TableContentArrayModel | Image.Image:
 
@@ -142,6 +155,8 @@ class Table(PageElement):
                 self.content = self.extract_table_llm(self.fitz_page, clip=self.outer_bbox)
             elif self.method == 'toimage':
                 self.content = self.outer_image
+            elif self.method == 'tatr':
+                self.content = self.extract_tables_tatr(self.outer_image, self.fitz_page, self.outer_bbox)
             else:
                 raise NotImplementedError
         else:
@@ -160,7 +175,7 @@ class Table(PageElement):
         # if table is converted to image, just return base64 encoding
         if self.method == 'toimage':
             image_base64 = pil_to_base64(content)
-            return f'![Figure(]data:image/png;base64,{image_base64})'
+            return f'![Figure](data:image/png;base64,{image_base64})'
         
         # Generate the markdown for each table
         markdown_tables = []

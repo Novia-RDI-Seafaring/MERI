@@ -59,7 +59,8 @@ meri/transformation/elements/llm_extractor.py
         ]
 
         chat_response = chat_completion_request(
-            self.client, messages, tools=tools, tool_choice={"type": "function", "function": {"name": tool_func.value}}
+            self.client, messages, tools=tools, tool_choice={"type": "function", "function": {"name": tool_func.value}},
+            log_token_usage=True
         )
 
         # check if message is complete, else JSON is incorrect

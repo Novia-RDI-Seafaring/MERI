@@ -48,7 +48,7 @@ class DocumentTransformer:
         font_size_dict = get_font_sizes(self.unmatched_text_blocks, setattrs=True)
         add_font_info_to_textblocks(self.unmatched_text_blocks, font_size_dict)
     
-    def merge_with_annotations(self, dps: dd.datapoint.view.Page, match_types=List[dd.LayoutType]) -> None:
+    def merge_with_annotations(self, dps: List[dd.datapoint.view.Page], match_types=List[dd.LayoutType]) -> None:
         """ matches annotations for each page
         """
         

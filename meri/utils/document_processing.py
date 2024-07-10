@@ -72,29 +72,23 @@ class DocumentProcessor:
 
     @staticmethod
     def display_yaml_file(use_default, file):
-        if use_default:
-            pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
-            try:
+        try:
+            if use_default:
+                pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
                 with open(pipeline_config_path, 'r') as f:
                     file_content = f.read()
-            except Exception as e:
-                return f"Error reading default pipeline file: {e}"
-        else:
-            if file is None:
-                return "No file uploaded."
-            try:
+            else:
+                if file is None:
+                    return "No file uploaded."
                 with open(file.name, 'r') as f:
                     file_content = f.read()
-            except Exception as e:
-                return f"Error reading file: {e}"
-        return DocumentProcessor.yaml_to_markdown(file_content)
+            return DocumentProcessor.yaml_to_markdown(file_content)
+        except Exception as e:
+            return f"Error reading YAML file: {e}"
 
     @staticmethod
     def select_im(images, annotated_images, page_id):
-        if len(annotated_images) != len(images):
-            return gr.update(value=images[page_id-1])   
-        else:
-            return gr.update(value=annotated_images[page_id-1])
+        return gr.update(value=images[page_id-1] if len(annotated_images) != len(images) else annotated_images[page_id-1])
 
     @staticmethod
     def upload_pdf_new(pdf_path, idx):
@@ -111,7 +105,6 @@ class DocumentProcessor:
     def markdown_to_dict(markdown_content):
         try:
             yaml_content = yaml.safe_load(markdown_content)
-            print(f"YAML content: {yaml_content}")  # Debug print statement
             return yaml_content
         except yaml.YAMLError as e:
             print(f"Error parsing Markdown content: {e}")
@@ -119,65 +112,59 @@ class DocumentProcessor:
 
     @staticmethod
     def analyze(pdf_path, use_default, file, page_id):
-        if use_default:
-            pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
-            try:
+        try: 
+            if use_default:
+                pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
                 with open(pipeline_config_path, 'r') as f:
                     loaded_yaml = f.read()
-            except Exception as e:
-                return f"Error reading default pipeline file: {e}", None, None, None, None, None
-        else:
-            if file is None:
-                return "No file uploaded.", None, None, None, None, None
-            try:
+            else:
+                if file is None:
+                    return "No file uploaded.", None, None, None, None, None
                 with open(file.name, 'r') as f:
                     loaded_yaml = f.read()
-            except Exception as e:
-                return f"Error reading file: {e}", None, None, None, None, None
+            pipeline_config = yaml.safe_load(loaded_yaml)
+            if not isinstance(pipeline_config, dict) or 'COMPONENTS' not in pipeline_config:
+                return "Invalid pipeline configuration", None, None, None, None, None
+        except Exception as e:
+            return f"Error reading default pipeline file: {e}", None, None, None, None, None
 
         try:
-            pipeline_config = yaml.safe_load(loaded_yaml)
-        except yaml.YAMLError as e:
-            return f"Error parsing YAML content: {e}", None, None, None, None, None
+            pipeline = Pipeline()
+            for comp in pipeline_config['COMPONENTS']:
+                comp_class_name = comp['CLASS']
+                comp_kwargs = comp['KWARGS']
+                comp_class = globals().get(comp_class_name)
+                if comp_class is not None:
+                    pipeline.add(comp_class(**comp_kwargs))
+                else:
+                    return f"Component class {comp_class_name} not found", None, None, None, None, None
 
-        if not isinstance(pipeline_config, dict) or 'COMPONENTS' not in pipeline_config:
-            return "Invalid pipeline configuration", None, None, None, None, None
+            pipeline.build()
+            dps, page_dicts = pipeline.run(pdf_path)
 
-        pipeline = Pipeline()
-        for comp in pipeline_config['COMPONENTS']:
-            comp_class_name = comp['CLASS']
-            comp_kwargs = comp['KWARGS']
-            comp_class = globals().get(comp_class_name)
-            if comp_class is not None:
-                pipeline.add(comp_class(**comp_kwargs))
-            else:
-                return f"Component class {comp_class_name} not found", None, None, None, None, None
+            all_category_names = []
+            dd_images = []
+            dd_annotations = []
+            for dp in dps:
+                category_names_list = []
+                bboxes = []
+                anns = dp.get_annotation()
+                for ann in anns:
+                    bboxes.append([int(cord) for cord in ann.bbox])
+                    category_names_list.append(ann.category_name.value)
+                annotations = list(zip(bboxes, category_names_list))
+                dd_images.append(dp.image_orig._image)
+                dd_annotations.append(annotations)
+                all_category_names += category_names_list
 
-        pipeline.build()
-        dps, page_dicts = pipeline.run(pdf_path)
-
-        all_category_names = []
-        dd_images = []
-        dd_annotations = []
-        for dp in dps:
-            category_names_list = []
-            bboxes = []
-            anns = dp.get_annotation()
-            for ann in anns:
-                bboxes.append([int(cord) for cord in ann.bbox])
-                category_names_list.append(ann.category_name.value)
-            annotations = list(zip(bboxes, category_names_list))
-            dd_images.append(dp.image_orig._image)
-            dd_annotations.append(annotations)
-            all_category_names += category_names_list
-
-        return (dd_images, dd_images, dd_images[page_id-1], dd_annotations,
-                gr.update(choices=np.unique(all_category_names).tolist()), 
-                gr.update(visible=True), dps)
+            return (dd_images, dd_images, dd_images[page_id-1], dd_annotations,
+                    gr.update(choices=np.unique(all_category_names).tolist()), 
+                    gr.update(visible=True), dps)
+        except Exception as e:
+            return f"Error processing pipeline: {e}", None, None, None, None, None
 
     @staticmethod
     def draw_bboxes_on_im(images, rel_labels, page_id, all_annotations):
-        print('draw rects: ', rel_labels)
         annotated_images = []
         color_map = {
             'table': (0, 255, 0, 255), # Green
@@ -203,13 +190,8 @@ class DocumentProcessor:
 
     @staticmethod
     def transform_structure(method, selected_elements, structured_format, pdf_path, dps):
-        if method == "PDF_Plumber":
-            table_method = 'pdfplumber'
-        elif method == "LLMs":
-            table_method = 'llm'
-        elif method == "TATR":
-            table_method = 'tatr'
 
+        table_method = method.lower()
         annotations_to_merge = [dd.LayoutType[element] for element in selected_elements]
         doc_transformer = DocumentTransformer(pdf_path, table_extraction_method=table_method)
         doc_transformer.merge_with_annotations(dps, annotations_to_merge)
@@ -255,3 +237,15 @@ class DocumentProcessor:
             return res, output_file
         except Exception as e:
             return f"Error extracting parameters: {e}", None
+        
+    @staticmethod
+    def display_json_schema(file):
+        if file is None:
+            return "No JSON schema uploaded.", None
+
+        try:
+            with open(file.name, 'r') as f:
+                schema_content = json.load(f)
+            return schema_content
+        except Exception as e:
+            return f"Error reading JSON schema: {e}", None

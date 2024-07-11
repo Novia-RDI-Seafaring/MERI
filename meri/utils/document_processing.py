@@ -190,8 +190,13 @@ class DocumentProcessor:
 
     @staticmethod
     def transform_structure(method, selected_elements, structured_format, pdf_path, dps):
-
-        table_method = method.lower()
+        if method == "PDF_Plumber":
+            table_method = 'pdfplumber'
+        elif method == "LLMs":
+            table_method = 'llm'
+        elif method == "TATR":
+            table_method = 'tatr'
+        # table_method = method.lower()
         annotations_to_merge = [dd.LayoutType[element] for element in selected_elements]
         doc_transformer = DocumentTransformer(pdf_path, table_extraction_method=table_method)
         doc_transformer.merge_with_annotations(dps, annotations_to_merge)

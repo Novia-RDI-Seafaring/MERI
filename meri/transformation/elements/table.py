@@ -80,6 +80,12 @@ class Table(PageElement):
         else:
             return []
 
+    def contained_words(self):
+        words = self.fitz_page.get_textpage(clip=self.outer_bbox).extractWORDS()
+        words = [w[:5] for w in words]
+
+        return words
+
     @classmethod
     def extract_table_llm(cls, fitz_page: fitz.Page, clip = None, custom_jinja_prompt=None) -> TableContentArrayModel:
         table_im = pdf_to_im(fitz_page, cropbbox=clip)
@@ -132,7 +138,8 @@ class Table(PageElement):
             potential_tables.append(current_table)
 
         return potential_tables
-
+    
+    @classmethod
     def extract_tables_tatr(cls, table_im, fitz_page, table_bbox):
         table_extractor = TSRBasedTableExtractor(tsr_thr=0.85)
         out_formats, _, _ = table_extractor.cell_based_extract(

@@ -31,30 +31,13 @@ class Table(PageElement):
         self.content: TableContentArrayModel = None
 
     @classmethod
-    def extract_table_plumber(cls, plumber_page: pdfplumber.page, clip = None) -> TableContentArrayModel:
-        """_summary_
-
-        Args:
-            plumber_page (pdfplumber.page): _description_
-            clip (_type_, optional): _description_. Defaults to None.
-
-        Returns:
-            _type_: list of detected tables. Each table is of type TableContentModel
-            e.g. [
-                [[cell1, cell2,...],    # row1
-                [cell3, cell4]]         # row2
-            ]
-        """
-        
+    def extract_table_plumber(cls, plumber_page: pdfplumber.page, clip=None) -> TableArrayModel2:
         # Extracting potential tables using pdfplumber
         potential_tables = cls.extract_potential_tables_pdfplumber(plumber_page, clip)
 
-        if len(potential_tables)>0: 
-            # Extract the text from the potential tables
+        if len(potential_tables) > 0:
             tables = []
             for table in potential_tables:
-                
-                # initialize metadata as empty
                 table_metadata = TableMetaDataModel(title='', description='')
 
                 # Extract text from each block in the table and structure it into rows
@@ -87,20 +70,53 @@ class Table(PageElement):
         return words
 
     @classmethod
-    def extract_table_llm(cls, fitz_page: fitz.Page, clip = None, custom_jinja_prompt=None) -> TableContentArrayModel:
+    def extract_table_llm(cls, fitz_page: fitz.Page, clip=None, custom_jinja_prompt=None) -> TableArrayModel2:
         table_im = pdf_to_im(fitz_page, cropbbox=clip)
 
         words = fitz_page.get_textpage(clip=clip).extractWORDS()
         words = [w[:5] for w in words]
 
-        gpt_extractor = GPTExtractor() #GPTLayoutElementExtractor()
+        gpt_extractor = GPTExtractor()  # GPTLayoutElementExtractor()
         try:
-            tables = gpt_extractor.extract_content(GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT, table_im, words_arr=words, custom_jinja_prompt=custom_jinja_prompt)
+            raw_tables = gpt_extractor.extract_content(GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT, table_im, words_arr=words, custom_jinja_prompt=custom_jinja_prompt)
         except Exception as e:
-            print('Exception occured when extracting table data with llm: ', e)
-            tables = []
+            print('Exception occurred when extracting table data with llm: ', e)
+            raw_tables = []
 
-        return tables
+        tables = []
+        for raw_table in raw_tables:
+            # Debug print to understand the structure of raw_table
+            print("raw_table structure:", raw_table)
+
+            # raw_table contains a list of TableContentModel instances
+            for table_content in raw_table[1]:
+                if isinstance(table_content, TableContentModel):
+                    table_metadata = table_content.metadata
+                    rows_data = table_content.rows
+
+                    # Create metadata
+                    table_metadata = TableMetaDataModel(title=table_metadata.title, description=table_metadata.description)
+
+                    # Process rows and cells
+                    cells = []
+                    for row_index, row in enumerate(rows_data):
+                        for col_index, cell in enumerate(row):
+                            cells.append(
+                                TableCellModel(
+                                    text=cell.text,
+                                    row_nums=[row_index],  # Use the actual row index
+                                    col_nums=[col_index],  # Use the actual column index
+                                    col_header=cell.isheader,
+                                    bbox=cell.bbox
+                                )
+                            )
+
+                    tables.append(TableModel2(metadata=table_metadata, cells=cells))
+                else:
+                    print("Unexpected table_content format:", table_content)
+
+        return TableArrayModel2(table_contents=tables)
+
 
     @classmethod
     def extract_potential_tables_pdfplumber(cls, plumber_page: pdfplumber.page, clip = None):

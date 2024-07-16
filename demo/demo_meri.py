@@ -18,6 +18,16 @@ custom_css = """
     padding: 10px;
     border: 1px solid #ccc;
 }
+.scrollable-json .json-holder {
+    max-height: 350px;
+    overflow-y: scroll;
+    overflow-x: scroll;
+}
+.scrollable-jsons .json-holder {
+    max-height: 400px;
+    overflow-y: scroll;
+    overflow-x: scroll;
+}
 """
 
 with gr.Blocks(title="Information Extraction from Document", css=custom_css) as demo:
@@ -89,10 +99,11 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
 
                     with gr.Row():
                         json_input = gr.File(label="JSON Configuration")
+                        json_schema = gr.JSON(label="JSON Schema Content", visible=True, elem_classes="scrollable-json")
                     with gr.Row():
                         extract_btn = gr.Button("Extract Parameters", variant="primary")
                     with gr.Row():
-                        json_result = gr.JSON(label="JSON Parameter Result", visible=True, elem_classes="scrollable-markdown")
+                        json_result = gr.JSON(label="JSON Parameter Result", visible=True, elem_classes="scrollable-jsons")
                     with gr.Row():
                         download_btn = gr.File(label="Download JSON")
 
@@ -126,6 +137,8 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
     def extract_parameters_interface(json_file, markdown_str):
         return processor.extract_parameters(json_file, markdown_str)
 
+    # Display the JSON schema content
+    json_input.upload(processor.display_json_schema, inputs=json_input, outputs=json_schema)
     extract_btn.click(fn=extract_parameters_interface, inputs=[json_input, markdown_str], outputs=[json_result, download_btn])
     
 demo.launch()

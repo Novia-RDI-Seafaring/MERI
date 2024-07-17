@@ -1,12 +1,13 @@
 layout_analysis:
-  CONFIG_PATH: 'meri/layout/config/good_pipeline.yaml'
+  CONFIG_PATH: '/workspaces/meri/meri/layout/config/good_pipeline.yaml'
 transformer:
   FORMAT: 'markdown'
   KWARGS: 
-    table_extraction_method: 'toimage'
+    table_extraction_method: 'tatr'
 extractor:
   METHOD: 'populate_schema'
   KWARGS:
-    chunks_max_characters: 1000
-    chunk_overlap: 2
+    chunks_max_characters: 1000000
+    chunk_overlap: 0
+    n_rounds: 2
     model: 'gpt-4o'

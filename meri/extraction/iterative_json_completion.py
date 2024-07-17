@@ -38,10 +38,11 @@ class IterativePopulationStrategies(Enum):
 
 class IterativeJsonPopulator:
 
-    def __init__(self, json_schema_str: str, strategy: IterativePopulationStrategies, model = 'gpt-4o', api_key: str = None) -> None:
+    def __init__(self, json_schema_str: str, strategy: IterativePopulationStrategies, n_rounds=1, model = 'gpt-4o', api_key: str = None) -> None:
         self.json_schema_str = json_schema_str
         self.population_strategy = strategy
         self.model = model
+        self.n_rounds = n_rounds
 
         if api_key is None:
             api_key = os.getenv("OPENAI_API_KEY")
@@ -71,38 +72,40 @@ class IterativeJsonPopulator:
                                         func_desc='populate a json schema',
                                         output_schema=json.loads(self.json_schema_str))
 
-        for c_chunk in tqdm.tqdm(content_chunks, total=len(content_chunks), desc='Processing content chunks'):
+        for i in range(self.n_rounds):
+            print('Round: ', i)
+            for c_chunk in tqdm.tqdm(content_chunks, total=len(content_chunks), desc='Processing content chunks'):
 
-            try:
-                prompt = generate_self_supervised_json_population_prompt(populated_dict)
+                try:
+                    prompt = generate_self_supervised_json_population_prompt(populated_dict)
 
-                # construct messages array by iterating through it, until base64 is reached, put as type test
-                # then base 64 as type image_url then again text ... First message is then instruction
-                messages = [
-                    {
-                    "role": "user",
-                    "content": [{"type": "text", "text": prompt}] + c_chunk,
-                    }
-                ]
+                    # construct messages array by iterating through it, until base64 is reached, put as type test
+                    # then base 64 as type image_url then again text ... First message is then instruction
+                    messages = [
+                        {
+                        "role": "user",
+                        "content": [{"type": "text", "text": prompt}] + c_chunk,
+                        }
+                    ]
 
-                chat_response = chat_completion_request(client=self.client,
-                                    messages=messages,
-                                    tools=tools,
-                                    tool_choice={"type": "function", "function": {"name": "populate_json_schema"}},
-                                    model=self.model,
-                                    log_token_usage=True)
+                    chat_response = chat_completion_request(client=self.client,
+                                        messages=messages,
+                                        tools=tools,
+                                        tool_choice={"type": "function", "function": {"name": "populate_json_schema"}},
+                                        model=self.model,
+                                        log_token_usage=True)
 
-                # check if message is complete, else JSON is incorrect
-                if chat_response.choices[0].finish_reason == 'length':
-                    print('GPT finished generation with finish reason length.')
-                    #raise RuntimeError('GPT finished generation with finish reason length.')
+                    # check if message is complete, else JSON is incorrect
+                    if chat_response.choices[0].finish_reason == 'length':
+                        print('GPT finished generation with finish reason length.')
+                        #raise RuntimeError('GPT finished generation with finish reason length.')
 
-                tool_calls = chat_response.choices[0].message.tool_calls
+                    tool_calls = chat_response.choices[0].message.tool_calls
 
-                # update populated dict
-                populated_dict = json.loads(tool_calls[0].function.arguments)
-            except Exception as e:
-                print('Could finish schema population iteration: ', e)
+                    # update populated dict
+                    populated_dict = json.loads(tool_calls[0].function.arguments)
+                except Exception as e:
+                    print('Could finish schema population iteration: ', e)
         
 
         return populated_dict

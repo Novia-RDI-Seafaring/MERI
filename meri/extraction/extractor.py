@@ -26,7 +26,7 @@ def create_openai_tools_arr(func_name, func_desc, output_schema):
 
 class JsonExtractor:
 
-    def __init__(self, intermediate_format: BasicFormatHandler, chunks_max_characters=1000, chunk_overlap=2, model='gpt-4o', api_key: str = None) -> None:
+    def __init__(self, intermediate_format: BasicFormatHandler, chunks_max_characters=1000, chunk_overlap=2,  n_rounds=1, model='gpt-4o', api_key: str = None) -> None:
         
         self.intermediate_format = intermediate_format # markdown or html
         if api_key is None:
@@ -37,6 +37,7 @@ class JsonExtractor:
 
         self.chunks_max_characters = chunks_max_characters
         self.chunk_overlap = chunk_overlap
+        self.n_rounds = n_rounds
 
     def populate_schema(self, json_schema_string: str):
         """Populates json file based on provided json_schema
@@ -47,7 +48,7 @@ class JsonExtractor:
         chunks = self.intermediate_format.chunk(character_threshold=self.chunks_max_characters, overlap=self.chunk_overlap)
         content_chunks = [self.intermediate_format.prepare_gpt_message_content(chunk) for chunk in chunks]
         
-        populator = IterativeJsonPopulator(json_schema_string, IterativePopulationStrategies.SELFSUPERVISED.value, model = 'gpt-4o')
+        populator = IterativeJsonPopulator(json_schema_string, IterativePopulationStrategies.SELFSUPERVISED.value, n_rounds=self.n_rounds, model = 'gpt-4o')
         results = populator.complete(content_chunks)
 
         return results

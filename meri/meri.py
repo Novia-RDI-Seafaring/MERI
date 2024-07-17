@@ -39,11 +39,11 @@ class MERI:
 
          ## create intermedaite format
         annotations_to_merge = [dd.LayoutType.figure, dd.LayoutType.table]
-        doc_transformer = DocumentTransformer(self.pdf_path, **self.transformer_config['KWARGS'])
-        doc_transformer.merge_with_annotations(dps, annotations_to_merge)
-        doc_transformer.docorate_unmatched_textblocks()
+        self.doc_transformer = DocumentTransformer(self.pdf_path, **self.transformer_config['KWARGS'])
+        self.doc_transformer.merge_with_annotations(dps, annotations_to_merge)
+        self.doc_transformer.docorate_unmatched_textblocks()
 
-        intermediate_format = doc_transformer.transform_to(self.transformer_config['FORMAT'])
+        intermediate_format = self.doc_transformer.transform_to(self.transformer_config['FORMAT'])
 
         return intermediate_format
 
@@ -54,9 +54,9 @@ class MERI:
         else:
             raise NotImplementedError
 
-        jsonExtractor = JsonExtractor(intermediate_format=format_handler, **self.extractor_config['KWARGS'])
+        self.jsonExtractor = JsonExtractor(intermediate_format=format_handler, **self.extractor_config['KWARGS'])
         
-        res = jsonExtractor.populate_schema(json_schema_string=json_schema_string)
+        res = self.jsonExtractor.populate_schema(json_schema_string=json_schema_string)
         return res
     
     def run(self, json_schema_string):

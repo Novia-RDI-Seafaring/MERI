@@ -49,15 +49,18 @@ class IterativeJsonPopulator:
         self.client = openai.Client(api_key=api_key)
 
     def complete(self, content_chunks: List[List[Dict]]):
-
-        if self.population_strategy == IterativePopulationStrategies.ONE2ONE:
+        
+        if self.population_strategy == IterativePopulationStrategies.ONE2ONE.value:
             results = self.one2one_completion(content_chunks)
 
-        elif self.population_strategy == IterativePopulationStrategies.ONE2MANY:
+        elif self.population_strategy == IterativePopulationStrategies.ONE2MANY.value:
             results = self.one2many_completion(content_chunks)
         
-        elif self.population_strategy == IterativePopulationStrategies.SELFSUPERVISED:
+        elif self.population_strategy == IterativePopulationStrategies.SELFSUPERVISED.value:
             results = self.selfsupervised_completion(content_chunks)
+        else:
+            print(self.population_strategy)
+            raise NotImplementedError
 
         return results            
     
@@ -68,33 +71,39 @@ class IterativeJsonPopulator:
                                         func_desc='populate a json schema',
                                         output_schema=json.loads(self.json_schema_str))
 
-        for c_chunk in tqdm.tqdm(content_chunks, total=len(content_chunks)):
-            prompt = generate_self_supervised_json_population_prompt(populated_dict)
+        for c_chunk in tqdm.tqdm(content_chunks, total=len(content_chunks), desc='Processing content chunks'):
 
-            # construct messages array by iterating through it, until base64 is reached, put as type test
-            # then base 64 as type image_url then again text ... First message is then instruction
-            messages = [
-                {
-                "role": "user",
-                "content": [{"type": "text", "text": prompt}] + c_chunk,
-                }
-            ]
+            try:
+                prompt = generate_self_supervised_json_population_prompt(populated_dict)
 
-            chat_response = chat_completion_request(client=self.client,
-                                messages=messages,
-                                tools=tools,
-                                tool_choice={"type": "function", "function": {"name": "populate_json_schema"}},
-                                model=self.model)
+                # construct messages array by iterating through it, until base64 is reached, put as type test
+                # then base 64 as type image_url then again text ... First message is then instruction
+                messages = [
+                    {
+                    "role": "user",
+                    "content": [{"type": "text", "text": prompt}] + c_chunk,
+                    }
+                ]
 
-             # check if message is complete, else JSON is incorrect
-            if chat_response.choices[0].finish_reason == 'length':
-                print('GPT finished generation with finish reason length.')
-                #raise RuntimeError('GPT finished generation with finish reason length.')
+                chat_response = chat_completion_request(client=self.client,
+                                    messages=messages,
+                                    tools=tools,
+                                    tool_choice={"type": "function", "function": {"name": "populate_json_schema"}},
+                                    model=self.model,
+                                    log_token_usage=True)
 
-            tool_calls = chat_response.choices[0].message.tool_calls
+                # check if message is complete, else JSON is incorrect
+                if chat_response.choices[0].finish_reason == 'length':
+                    print('GPT finished generation with finish reason length.')
+                    #raise RuntimeError('GPT finished generation with finish reason length.')
 
-            # update populated dict
-            populated_dict = json.loads(tool_calls[0].function.arguments)
+                tool_calls = chat_response.choices[0].message.tool_calls
+
+                # update populated dict
+                populated_dict = json.loads(tool_calls[0].function.arguments)
+            except Exception as e:
+                print('Could finish schema population iteration: ', e)
+        
 
         return populated_dict
 

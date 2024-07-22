@@ -136,7 +136,7 @@ class TablePlumberComponent(dd.PipelineComponent):
         # Sort the text blocks by top(vertical) and x0(horizontal) left coordinates
         text_blocks_sorted = sorted(text_blocks, key=lambda b: (b['top'], b['x0']))
         potential_tables = []
-        current_table = [text_blocks_sorted[0]]
+        current_table = [text_blocks_sorted[0]] if len(text_blocks_sorted) > 0 else []
         
         for block in text_blocks_sorted[1:]:
             last_block = current_table[-1]

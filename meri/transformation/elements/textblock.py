@@ -75,14 +75,16 @@ def get_font_sizes(tbs: List[TextBlock], setattrs=False):
     for tb in tbs:
         # assumes all content in textbox is same style
         tb_dict = tb.text_page.extractDICT()
-        if len(tb_dict['blocks'])>0:
+        #if len(tb_dict['blocks'])>0:
+        try:
             first_span = tb_dict['blocks'][0]["lines"][0]['spans'][0]
             fontsz = round(first_span['size'])
             font = first_span['font']
 
             count = fontsizes.get(fontsz, 0) + len(tbs[0].text_page.extractTEXT().strip())
             fontsizes[fontsz] = count
-        else:
+        #else:
+        except Exception:
             font = None
             fontsz = None
         if setattrs:

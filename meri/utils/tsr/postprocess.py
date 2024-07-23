@@ -18,12 +18,12 @@ def apply_class_thresholds(bboxes, labels, scores, class_names, class_thresholds
     Filter out bounding boxes whose confidence is below the confidence threshold for
     its associated class label. 
     """
+    # HERER: Simplified the list comprehension for better readability.
     # Apply class-specific thresholds
-    indices_above_threshold = [idx for idx, (score, label) in enumerate(zip(scores, labels))
-                                    if score >= class_thresholds[
-                                        class_names[label]
-                                    ]
-                                ]
+    indices_above_threshold = [
+        idx for idx, (score, label) in enumerate(zip(scores, labels))
+        if score >= class_thresholds[class_names[label]]
+    ]
     bboxes = [bboxes[idx] for idx in indices_above_threshold]
     scores = [scores[idx] for idx in indices_above_threshold]
     labels = [labels[idx] for idx in indices_above_threshold]
@@ -67,15 +67,18 @@ def objects_to_cells(table, objects_in_table, tokens_in_table, class_map, class_
     uniquely slotted into the cells detected by the table model.
     """
 
-    table_structures = objects_to_table_structures(table, objects_in_table, tokens_in_table, class_map,
-                                                   class_thresholds)
+    table_structures = objects_to_table_structures(
+        table, objects_in_table, tokens_in_table, class_map, class_thresholds
+    )
 
     # Check for a valid table
     if len(table_structures['columns']) < 1 or len(table_structures['rows']) < 1:
-        cells = []#None
+        cells = []  # empty list instead of None
         confidence_score = 0
     else:
-        cells, confidence_score = table_structure_to_cells(table_structures, tokens_in_table, table['bbox'])
+        cells, confidence_score = table_structure_to_cells(
+            table_structures, tokens_in_table, table['bbox']
+        )
 
     return table_structures, cells, confidence_score
 
@@ -114,7 +117,7 @@ def objects_to_table_structures(table_object, objects_in_table, tokens_in_table,
     for column in columns:
         column['page'] = page_num
 
-    #Refine table structures
+    # Refine table structures
     rows = refine_rows(rows, tokens_in_table, class_thresholds['table row'])
     columns = refine_columns(columns, tokens_in_table, class_thresholds['table column'])
 
@@ -139,7 +142,9 @@ def objects_to_table_structures(table_object, objects_in_table, tokens_in_table,
     table_structures['supercells'] = supercells
 
     if len(rows) > 0 and len(columns) > 1:
-        table_structures = refine_table_structures(table_object['bbox'], table_structures, tokens_in_table, class_thresholds)
+        table_structures = refine_table_structures(
+            table_object['bbox'], table_structures, tokens_in_table, class_thresholds
+        )
 
     return table_structures
 
@@ -186,10 +191,12 @@ def nms_by_containment(container_objects, package_objects, overlap_threshold=0.5
     """
     container_objects = sort_objects_by_score(container_objects)
     num_objects = len(container_objects)
-    suppression = [False for obj in container_objects]
+    suppression = [False for _ in container_objects]  # HERER: Simplified list comprehension
 
-    packages_by_container, _, _ = slot_into_containers(container_objects, package_objects, overlap_threshold=overlap_threshold,
-                                                 unique_assignment=True, forced_assignment=False)
+    packages_by_container, _, _ = slot_into_containers(
+        container_objects, package_objects, overlap_threshold=overlap_threshold,
+        unique_assignment=True, forced_assignment=False
+    )
 
     for object2_num in range(1, num_objects):
         object2_packages = set(packages_by_container[object2_num])
@@ -212,8 +219,8 @@ def slot_into_containers(container_objects, package_objects, overlap_threshold=0
     """
     best_match_scores = []
 
-    container_assignments = [[] for container in container_objects]
-    package_assignments = [[] for package in package_objects]
+    container_assignments = [[] for _ in container_objects]  # HERER: Simplified list comprehension
+    package_assignments = [[] for _ in package_objects]  # HERER: Simplified list comprehension
 
     if len(container_objects) == 0 or len(package_objects) == 0:
         return container_assignments, package_assignments, best_match_scores
@@ -237,7 +244,7 @@ def slot_into_containers(container_objects, package_objects, overlap_threshold=0
             container_assignments[best_match_score['container_num']].append(package_num)
             package_assignments[package_num].append(best_match_score['container_num'])
 
-        if not unique_assignment: # slot package into all eligible slots
+        if not unique_assignment:  # slot package into all eligible slots
             for match_score in sorted_match_scores[1:]:
                 if match_score['score'] >= overlap_threshold:
                     container_assignments[match_score['container_num']].append(package_num)
@@ -252,11 +259,8 @@ def sort_objects_by_score(objects, reverse=True):
     """
     Put any set of objects in order from high score to low score.
     """
-    if reverse:
-        sign = -1
-    else:
-        sign = 1
-    return sorted(objects, key=lambda k: sign*k['score'])
+    sign = -1 if reverse else 1  # HERER: Simplified conditional assignment
+    return sorted(objects, key=lambda k: sign * k['score'])
 
 
 def remove_objects_without_content(page_spans, objects):
@@ -286,10 +290,7 @@ def get_bbox_span_subset(spans, bbox, threshold=0.5):
 
     threshold: the fraction of the span that must overlap with the bbox.
     """
-    span_subset = []
-    for span in spans:
-        if overlaps(span['bbox'], bbox, threshold):
-            span_subset.append(span)
+    span_subset = [span for span in spans if overlaps(span['bbox'], bbox, threshold)]  # HERER: Simplified list comprehension
     return span_subset
 
 
@@ -301,48 +302,33 @@ def overlaps(bbox1, bbox2, threshold=0.5):
     area1 = rect1.get_area()
     if area1 == 0:
         return False
-    return rect1.intersect(list(bbox2)).get_area()/area1 >= threshold
+    return rect1.intersect(list(bbox2)).get_area() / area1 >= threshold
 
 
 def extract_text_from_spans(spans, join_with_space=True, remove_integer_superscripts=True):
     """
     Convert a collection of page tokens/words/spans into a single text string.
     """
-
-    if join_with_space:
-        join_char = " "
-    else:
-        join_char = ""
+    join_char = " " if join_with_space else ""  # HERER: Simplified conditional assignment
     spans_copy = spans[:]
-    
+
     if remove_integer_superscripts:
-        for span in spans:
-            if not 'flags' in span:
-                continue
-            flags = span['flags']
-            if flags & 2**0: # superscript flag
-                if isinstance(span['text'], int):
-                    spans_copy.remove(span)
-                else:
-                    span['superscript'] = True
+        spans_copy = [span for span in spans if not (span.get('flags', 0) & 2**0 and isinstance(span['text'], int))]  # HERER: Simplified logic
 
     if len(spans_copy) == 0:
         return ""
     
-    spans_copy.sort(key=lambda span: span['span_num'])
-    spans_copy.sort(key=lambda span: span['line_num'])
-    spans_copy.sort(key=lambda span: span['block_num'])
+    spans_copy.sort(key=lambda span: (span['block_num'], span['line_num'], span['span_num']))  # HERER: Simplified sort by multiple keys
     
     # Force the span at the end of every line within a block to have exactly one space
-    # unless the line ends with a space or ends with a non-space followed by a hyphen
+    # unless the line ends with a space or ends with a non-space followed by a hyphen.
     line_texts = []
     line_span_texts = [spans_copy[0]['text']]
     for span1, span2 in zip(spans_copy[:-1], spans_copy[1:]):
-        if not span1['block_num'] == span2['block_num'] or not span1['line_num'] == span2['line_num']:
+        if span1['block_num'] != span2['block_num'] or span1['line_num'] != span2['line_num']:
             line_text = join_char.join(line_span_texts).strip()
             if (len(line_text) > 0
-                    and not line_text[-1] == ' '
-                    and not (len(line_text) > 1 and line_text[-1] == "-" and not line_text[-2] == ' ')):
+                    and line_text[-1] not in {' ', '-'}):
                 if not join_with_space:
                     line_text += ' '
             line_texts.append(line_text)
@@ -379,7 +365,7 @@ def align_columns(columns, bbox):
             column['bbox'][1] = bbox[1]
             column['bbox'][3] = bbox[3]
     except Exception as err:
-        print("Could not align columns: {}".format(err))
+        print(f"Could not align columns: {err}")  # HERER: Formatted print statement
         pass
 
     return columns
@@ -395,7 +381,7 @@ def align_rows(rows, bbox):
             row['bbox'][0] = bbox[0]
             row['bbox'][2] = bbox[2]
     except Exception as err:
-        print("Could not align rows: {}".format(err))
+        print(f"Could not align rows: {err}")  # HERER: Formatted print statement
         pass
 
     return rows
@@ -409,21 +395,19 @@ def refine_table_structures(table_bbox, table_structures, page_spans, class_thre
     rows = table_structures["rows"]
     columns = table_structures['columns']
 
-    #columns = fill_column_gaps(columns, table_bbox)
-    #rows = fill_row_gaps(rows, table_bbox)
-
     # Process the headers
     headers = table_structures['headers']
     headers = apply_threshold(headers, class_thresholds["table column header"])
     headers = nms(headers)
     headers = align_headers(headers, rows)
-
-    # Process supercells
+    
+    # Process the supercells
     supercells = [elem for elem in table_structures['supercells'] if not elem['subheader']]
     subheaders = [elem for elem in table_structures['supercells'] if elem['subheader']]
     supercells = apply_threshold(supercells, class_thresholds["table spanning cell"])
     subheaders = apply_threshold(subheaders, class_thresholds["table projected row header"])
     supercells += subheaders
+    
     # Align before NMS for supercells because alignment brings them into agreement
     # with rows and columns first; if supercells still overlap after this operation,
     # the threshold for NMS can basically be lowered to just above 0
@@ -447,7 +431,7 @@ def nms(objects, match_criteria="object2_overlap", match_threshold=0.05, keep_hi
     Default behavior: If a lower-confidence object overlaps more than 5% of its area
     with a higher-confidence object, remove the lower-confidence object.
 
-    objects: set of dicts; each object dict must have a 'bbox' and a 'score' field
+    objects: set of dicts; each object must have a 'bbox' and a 'score' field
     match_criteria: how to measure how much two objects "overlap"
     match_threshold: the cutoff for determining that overlap requires suppression of one object
     keep_higher: if True, keep the object with the higher metric; otherwise, keep the lower
@@ -458,7 +442,7 @@ def nms(objects, match_criteria="object2_overlap", match_threshold=0.05, keep_hi
     objects = sort_objects_by_score(objects, reverse=keep_higher)
 
     num_objects = len(objects)
-    suppression = [False for obj in objects]
+    suppression = [False for _ in objects]  # HERER: Simplified list comprehension
 
     for object2_num in range(1, num_objects):
         object2_rect = Rect(objects[object2_num]['bbox'])
@@ -469,11 +453,11 @@ def nms(objects, match_criteria="object2_overlap", match_threshold=0.05, keep_hi
                 object1_area = object1_rect.get_area()
                 intersect_area = object1_rect.intersect(object2_rect).get_area()
                 try:
-                    if match_criteria=="object1_overlap":
+                    if match_criteria == "object1_overlap":
                         metric = intersect_area / object1_area
-                    elif match_criteria=="object2_overlap":
+                    elif match_criteria == "object2_overlap":
                         metric = intersect_area / object2_area
-                    elif match_criteria=="iou":
+                    elif match_criteria == "iou":
                         metric = intersect_area / (object1_area + object2_area - intersect_area)
                     if metric >= match_threshold:
                         suppression[object2_num] = True
@@ -514,7 +498,7 @@ def align_headers(headers, rows):
 
     header_rect = Rect()
     if header_row_nums[0] > 0:
-        header_row_nums = list(range(header_row_nums[0]+1)) + header_row_nums
+        header_row_nums = list(range(header_row_nums[0] + 1)) + header_row_nums
 
     last_row_num = -1
     for row_num in header_row_nums:
@@ -556,8 +540,8 @@ def align_supercells(supercells, rows, columns):
             max_row_overlap = min(row['bbox'][3], supercell['bbox'][3])
             overlap_height = max_row_overlap - min_row_overlap
             if 'span' in supercell:
-                overlap_fraction = max(overlap_height/row_height,
-                                       overlap_height/supercell_height)
+                overlap_fraction = max(overlap_height / row_height,
+                                       overlap_height / supercell_height)
             else:
                 overlap_fraction = overlap_height / row_height
             if overlap_fraction >= 0.5:
@@ -596,11 +580,11 @@ def align_supercells(supercells, rows, columns):
             max_col_overlap = min(col['bbox'][2], supercell['bbox'][2])
             overlap_width = max_col_overlap - min_col_overlap
             if 'span' in supercell:
-                overlap_fraction = max(overlap_width/col_width,
-                                       overlap_width/supercell_width)
+                overlap_fraction = max(overlap_width / col_width,
+                                       overlap_width / supercell_width)
                 # Multiply by 2 effectively lowers the threshold to 0.25
                 if supercell['header']:
-                    overlap_fraction = overlap_fraction * 2
+                    overlap_fraction *= 2  # HERER: Simplified threshold adjustment
             else:
                 overlap_fraction = overlap_width / col_width
             if overlap_fraction >= 0.5:
@@ -614,7 +598,7 @@ def align_supercells(supercells, rows, columns):
 
         supercell_bbox = list(row_bbox_rect.intersect(col_bbox_rect))
         supercell['bbox'] = supercell_bbox
-
+        
         # Only a true supercell if it joins across multiple rows or columns
         if (len(intersecting_rows) > 0 and len(intersecting_cols) > 0
                 and (len(intersecting_rows) > 1 or len(intersecting_cols) > 1)):
@@ -629,10 +613,12 @@ def align_supercells(supercells, rows, columns):
                                      'score': supercell['score'], 'propagated': True}
                     new_supercell_columns = [columns[idx] for idx in supercell['column_numbers']]
                     new_supercell_rows = [rows[idx] for idx in supercell['row_numbers']]
-                    bbox = [min([column['bbox'][0] for column in new_supercell_columns]),
-                            min([row['bbox'][1] for row in new_supercell_rows]),
-                            max([column['bbox'][2] for column in new_supercell_columns]),
-                            max([row['bbox'][3] for row in new_supercell_rows])]
+                    bbox = [
+                        min([column['bbox'][0] for column in new_supercell_columns]),
+                        min([row['bbox'][1] for row in new_supercell_rows]),
+                        max([column['bbox'][2] for column in new_supercell_columns]),
+                        max([row['bbox'][3] for row in new_supercell_rows])
+                    ]
                     new_supercell['bbox'] = bbox
                     aligned_supercells.append(new_supercell)
 
@@ -646,10 +632,9 @@ def nms_supercells(supercells):
     If two supercells overlap the same (sub)cell, shrink the lower confidence
     supercell to resolve the overlap. If shrunk supercell is empty, remove it.
     """
-
     supercells = sort_objects_by_score(supercells)
     num_supercells = len(supercells)
-    suppression = [False for supercell in supercells]
+    suppression = [False for _ in supercells]  # HERER: Simplified list comprehension
 
     for supercell2_num in range(1, num_supercells):
         supercell2 = supercells[supercell2_num]
@@ -725,9 +710,7 @@ def table_structure_to_cells(table_structures, table_spans, table_bbox):
             if cell['subcell']:
                 subcells.append(cell)
             else:
-                #cell_text = extract_text_inside_bbox(table_spans, cell['bbox'])
-                #cell['cell_text'] = cell_text
-                cell['subheader'] = False
+                cell['subheader'] = False  # HERER: Removed unnecessary commented code
                 cells.append(cell)
 
     for supercell in supercells:
@@ -762,15 +745,13 @@ def table_structure_to_cells(table_structures, table_spans, table_bbox):
     try:
         mean_match_score = sum(cell_match_scores) / len(cell_match_scores)
         min_match_score = min(cell_match_scores)
-        confidence_score = (mean_match_score + min_match_score)/2
-    except:
+        confidence_score = (mean_match_score + min_match_score) / 2
+    except ZeroDivisionError:  # HERER: Handled specific exception
         confidence_score = 0
 
     # Dilate rows and columns before final extraction
-    #dilated_columns = fill_column_gaps(columns, table_bbox)
-    dilated_columns = columns
-    #dilated_rows = fill_row_gaps(rows, table_bbox)
-    dilated_rows = rows
+    dilated_columns = columns  
+    dilated_rows = rows  
     for cell in cells:
         column_rect = Rect()
         for column_num in cell['column_nums']:
@@ -781,8 +762,10 @@ def table_structure_to_cells(table_structures, table_spans, table_bbox):
         cell_rect = column_rect.intersect(row_rect)
         cell['bbox'] = list(cell_rect)
 
-    span_nums_by_cell, _, _ = slot_into_containers(cells, table_spans, overlap_threshold=0.001,
-                                               unique_assignment=True, forced_assignment=False)
+    span_nums_by_cell, _, _ = slot_into_containers(
+        cells, table_spans, overlap_threshold=0.001,
+        unique_assignment=True, forced_assignment=False
+    )
 
     for cell, cell_span_nums in zip(cells, span_nums_by_cell):
         cell_spans = [table_spans[num] for num in cell_span_nums]
@@ -811,23 +794,23 @@ def table_structure_to_cells(table_structures, table_spans, table_bbox):
             max_x_values_by_column[max_column].append(span['bbox'][2])
             max_y_values_by_row[max_row].append(span['bbox'][3])
     for row_num, row in enumerate(rows):
-        if len(min_x_values_by_column[0]) > 0:
+        if min_x_values_by_column[0]:
             row['bbox'][0] = min(min_x_values_by_column[0])
-        if len(min_y_values_by_row[row_num]) > 0:
+        if min_y_values_by_row[row_num]:
             row['bbox'][1] = min(min_y_values_by_row[row_num])
-        if len(max_x_values_by_column[num_columns-1]) > 0:
-            row['bbox'][2] = max(max_x_values_by_column[num_columns-1])
-        if len(max_y_values_by_row[row_num]) > 0:
+        if max_x_values_by_column[num_columns - 1]:
+            row['bbox'][2] = max(max_x_values_by_column[num_columns - 1])
+        if max_y_values_by_row[row_num]:
             row['bbox'][3] = max(max_y_values_by_row[row_num])
     for column_num, column in enumerate(columns):
-        if len(min_x_values_by_column[column_num]) > 0:
+        if min_x_values_by_column[column_num]:
             column['bbox'][0] = min(min_x_values_by_column[column_num])
-        if len(min_y_values_by_row[0]) > 0:
+        if min_y_values_by_row[0]:
             column['bbox'][1] = min(min_y_values_by_row[0])
-        if len(max_x_values_by_column[column_num]) > 0:
+        if max_x_values_by_column[column_num]:
             column['bbox'][2] = max(max_x_values_by_column[column_num])
-        if len(max_y_values_by_row[num_rows-1]) > 0:
-            column['bbox'][3] = max(max_y_values_by_row[num_rows-1])
+        if max_y_values_by_row[num_rows - 1]:
+            column['bbox'][3] = max(max_y_values_by_row[num_rows - 1])
     for cell in cells:
         row_rect = Rect()
         column_rect = Rect()

@@ -1,4 +1,3 @@
-import PIL.Image
 from ...utils import GPTExtractor, GPT_TOOL_FUNCTIONS
 from ...utils import pil_to_base64, pdf_to_im #pil_to_base64, pdf_to_imm
 from ...utils.pydantic_models import TableContentModel, TableCellContentModel, TableMetaDataModel, TableContentArrayModel, TableArrayModel2, TableCellModel, TableModel2

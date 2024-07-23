@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.patches import Patch
 
-import postprocess
+from . import postprocess
 
 
 def iob(bbox1, bbox2):
@@ -193,13 +193,12 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
     pred_scores = list(m.values.detach().cpu().numpy())[0]
     pred_bboxes = outputs['pred_boxes'].detach().cpu()[0]
     pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, img_size)]
-
-    objects = []
-    for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):
-        class_label = class_idx2name[int(label)]
-        if not class_label == 'no object':
-            objects.append({'label': class_label, 'score': float(score),
-                            'bbox': [float(elem) for elem in bbox]})
+    
+    objects = [
+        {'label': class_idx2name[int(label)], 'score': float(score), 'bbox': [float(elem) for elem in bbox]}
+        for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes)
+        if class_idx2name[int(label)] != 'no object'
+    ]  # HERER: Simplified object creation with list comprehension
 
     return objects
 
@@ -289,7 +288,7 @@ def structure_to_cells(table_structure, tokens):
         mean_match_score = sum(cell_match_scores) / len(cell_match_scores)
         min_match_score = min(cell_match_scores)
         confidence_score = (mean_match_score + min_match_score)/2
-    except:
+    except ZeroDivisionError:
         confidence_score = 0
 
     # Dilate rows and columns before final extraction
@@ -370,8 +369,9 @@ def structure_to_cells(table_structure, tokens):
 
 
 def cells_to_html(cells):
-    cells = sorted(cells, key=lambda k: min(k['column_nums']))
-    cells = sorted(cells, key=lambda k: min(k['row_nums']))
+    cells = sorted(cells, key=lambda k: (min(k['row_nums']), min(k['column_nums'])))  # HERER: Combined sorting keys
+    # cells = sorted(cells, key=lambda k: min(k['column_nums']))
+    # cells = sorted(cells, key=lambda k: min(k['row_nums']))
 
     table = ET.Element("table")
     current_row = -1
@@ -402,28 +402,22 @@ def cells_to_html(cells):
 
 def cells_to_csv(cells):
     if len(cells) > 0:
-        num_columns = max([max(cell['column_nums']) for cell in cells]) + 1
-        num_rows = max([max(cell['row_nums']) for cell in cells]) + 1
+        num_columns = max(max(cell['column_nums']) for cell in cells) + 1  # HERER: Simplified max calculation
+        num_rows = max(max(cell['row_nums']) for cell in cells) + 1  # HERER: Simplified max calculation
     else:
-        return
+        return ""
 
     header_cells = [cell for cell in cells if cell['column header']]
-    if len(header_cells) > 0:
-        max_header_row = max([max(cell['row_nums']) for cell in header_cells])
-    else:
-        max_header_row = -1
+    max_header_row = max(max(cell['row_nums']) for cell in header_cells) if header_cells else -1  # HERER: Simplified max calculation
 
     table_array = np.empty([num_rows, num_columns], dtype="object")
-    if len(cells) > 0:
-        for cell in cells:
-            for row_num in cell['row_nums']:
-                for column_num in cell['column_nums']:
-                    table_array[row_num, column_num] = cell["cell text"]
+    for cell in cells:
+        for row_num in cell['row_nums']:
+            for column_num in cell['column_nums']:
+                table_array[row_num, column_num] = cell["cell text"]
 
-    header = table_array[:max_header_row+1,:]
-    flattened_header = []
-    for col in header.transpose():
-        flattened_header.append(' | '.join(OrderedDict.fromkeys(col)))
-    df = pd.DataFrame(table_array[max_header_row+1:,:], index=None, columns=flattened_header)
+    header = table_array[:max_header_row + 1, :]
+    flattened_header = [' | '.join(OrderedDict.fromkeys(col)) for col in header.transpose()]  # HERER: Simplified list comprehension
+    df = pd.DataFrame(table_array[max_header_row + 1:, :], columns=flattened_header)
 
     return df.to_csv(index=None)

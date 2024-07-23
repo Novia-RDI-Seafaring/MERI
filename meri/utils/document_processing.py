@@ -25,6 +25,8 @@ from meri.utils.format_handler import MarkdownHandler
 from meri.extraction.extractor import JsonExtractor
 from meri.transformation.transformer import DocumentTransformer, Format
 
+# from pathlib import Path
+# sys.path.append(str(Path(__file__).resolve().parent.parent / 'MERI'))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../MERI')))
 
 class DocumentProcessor:
@@ -74,6 +76,7 @@ class DocumentProcessor:
     def display_yaml_file(use_default, file):
         try:
             if use_default:
+                # pipeline_config_path = Path(CONFIGS_PATH) / 'good_pipeline.yaml'
                 pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
                 with open(pipeline_config_path, 'r') as f:
                     file_content = f.read()
@@ -114,6 +117,7 @@ class DocumentProcessor:
     def analyze(pdf_path, use_default, file, page_id):
         try: 
             if use_default:
+                # pipeline_config_path = Path(CONFIGS_PATH) / 'good_pipeline.yaml'
                 pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
                 with open(pipeline_config_path, 'r') as f:
                     loaded_yaml = f.read()
@@ -181,7 +185,7 @@ class DocumentProcessor:
             for (bbox, label) in annotations:
                 if label in rel_labels:
                     fill_c = list(color_map[label])
-                    fill_c = [int(c*255) for c in fill_c]
+                    # fill_c = [int(c*255) for c in fill_c]
                     fill_c[-1] = 80
                     outline_c = [int(c*255) for c in color_map[label]]
                     im_draw.rectangle(bbox, outline=tuple(outline_c), fill=tuple(fill_c), width=4)

@@ -20,20 +20,30 @@ class DocumentTransformer:
         
         self.fitz_document = fitz.open(pdf_path)
         self.plumber_document = pdfplumber.open(pdf_path)
-        self.pages: List[PageTransformer] = [PageTransformer(fitz_page, 
-                                                             plumber_page,
-                                                             table_extraction_method=table_extraction_method) for (fitz_page, plumber_page) in list(zip(self.fitz_document, self.plumber_document.pages))]
+        self.pages: List[PageTransformer] = []
+        for i, (fitz_page, plumber_page) in enumerate(list(zip(self.fitz_document, self.plumber_document.pages))):
+            try:
+                self.pages.append(PageTransformer(fitz_page, 
+                                                plumber_page,
+                                                table_extraction_method=table_extraction_method))
+            except NotImplementedError as error:
+                self.pages.append(None)
+                print('Error occured processing page: {}. Error: {}'.format(i,error))
+        #self.pages: List[PageTransformer] = [PageTransformer(fitz_page, 
+        #                                                     plumber_page,
+        #                                                     table_extraction_method=table_extraction_method) for (fitz_page, plumber_page) in list(zip(self.fitz_document, self.plumber_document.pages))]
 
     @property
     def unmatched_text_blocks(self):
-        return list(itertools.chain(*[page.unmatched_text_blocks for page in self.pages]))
+        return list(itertools.chain(*[page.unmatched_text_blocks for page in self.pages if page is not None]))
 
     def transform_to(self, format: str):
         
         if format == Format.MARKDOWN.value:
             page_markdowns: List[str] = []
             for page_transformer in self.pages:
-                page_markdowns.append(page_transformer.to_markdown())
+                if page_transformer is not None:
+                    page_markdowns.append(page_transformer.to_markdown())
 
             return "\n\n".join(page_markdowns)
         
@@ -55,8 +65,9 @@ class DocumentTransformer:
         assert len(self.pages) == len(dps)
 
         for (page, dp) in tqdm.tqdm(list(zip(self.pages, dps))):
-            page.match_with_annotations(dp, match_types)
-
+            if page is not None:
+                page.match_with_annotations(dp, match_types)
+        
         #logger.info(f'Matched Annotations for all ({len(dps)}) pages')
 
 class PageTransformer:
@@ -83,6 +94,8 @@ class PageTransformer:
         """ 
         """
         text_blocks = page.get_text_blocks()
+        if len(text_blocks) == 0:
+            raise NotImplementedError("PDF does not contain text blocks. Require proper formatted PDFs currently.")
         content = []
         for (x0, y0, x1, y1, _, block_no, block_type) in text_blocks:
             bbox = [x0,y0,x1,y1]

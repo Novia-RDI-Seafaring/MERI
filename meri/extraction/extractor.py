@@ -29,10 +29,11 @@ class JsonExtractor:
     def __init__(self, intermediate_format: BasicFormatHandler, chunks_max_characters=1000, chunk_overlap=2,  n_rounds=1, model='gpt-4o', api_key: str = None) -> None:
         
         self.intermediate_format = intermediate_format # markdown or html
-        if api_key is None:
-            api_key = os.getenv("OPENAI_API_KEY")
+        # if api_key is None:
+        #     api_key = os.getenv("OPENAI_API_KEY")
         
-        self.client = openai.Client(api_key=api_key)
+        # self.client = openai.Client(api_key=api_key)
+        self.client = openai.Client(api_key=api_key or os.getenv("OPENAI_API_KEY"))
         self.model = model
 
         self.chunks_max_characters = chunks_max_characters

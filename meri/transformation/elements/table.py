@@ -164,7 +164,6 @@ class Table(PageElement):
         )
 
         # cell bbox are in cropped im coordinates. need to scale to full page coordinates
-        print('new')
         source_height, source_width = np.array(table_im).shape[:2]
         for table_cells in out_formats["cells"]:
             for cell in table_cells:

@@ -1,5 +1,5 @@
 from ...utils import GPTExtractor, GPT_TOOL_FUNCTIONS
-from ...utils import pil_to_base64, pdf_to_im #pil_to_base64, pdf_to_imm
+from ...utils import pil_to_base64, pdf_to_im, sub_coords_to_abs_coords #pil_to_base64, pdf_to_imm
 from ...utils.pydantic_models import TableContentModel, TableCellContentModel, TableMetaDataModel, TableContentArrayModel, TableArrayModel2, TableCellModel, TableModel2
 from .page_element import PageElement
 from ...utils.table_structure_recognizer import TSRBasedTableExtractor
@@ -162,6 +162,13 @@ class Table(PageElement):
             pdf_full_fitz_page=fitz_page,
             table_bbox=table_bbox
         )
+
+        # cell bbox are in cropped im coordinates. need to scale to full page coordinates
+        print('new')
+        source_height, source_width = np.array(table_im).shape[:2]
+        for table_cells in out_formats["cells"]:
+            for cell in table_cells:
+                cell["bbox"] = sub_coords_to_abs_coords(cell["bbox"] , source_height, source_width, table_bbox)
 
         # only one table
         tables = [TableModel2.from_tsr_cells(table_cells) for table_cells in out_formats['cells']]

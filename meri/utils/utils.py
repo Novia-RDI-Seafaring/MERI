@@ -40,6 +40,27 @@ def scale_coords(source_coords, source_height, source_width, target_height, targ
 
     return rect_shape
 
+def sub_coords_to_abs_coords(source_coords, source_height, source_width, sub_abs_cropbox):
+    """ Takes coordinates that are relative to a cropped part of the original shape (e.g. image) and transforms
+    them to coordinates that are in absolute coordinates relative to the original shape
+
+    Args:
+        source_coords (_type_): Coordinate (x0,y0,x1,y1) in coordinate of the cropped shape that needs to be transformed
+        source_height (_type_): Height of cropped shape the source coord is relative to.
+        source_width (_type_): Width of the cropped shape the source coord is relative to.
+        sub_abs_cropbox (_type_): Box (x0,y0,x1,y1) in coordinates of the original shape outlining the sub shape
+
+    Returns:
+        _type_: _description_
+    """
+
+    margin_l, margin_top, x1, y1 = sub_abs_cropbox
+    target_height, target_width = y1-margin_top, x1-margin_l
+
+    pdf_coords = scale_coords(source_coords, source_height, source_width, target_height, target_width)
+    pdf_coords_adj = [pdf_coords[0]+margin_l, pdf_coords[1]+margin_top,pdf_coords[2]+margin_l, pdf_coords[3]+margin_top]
+
+    return pdf_coords_adj
 
 def pil_to_base64(pil_image: Image, raw=True):
     """ Converts PIL to base64 string

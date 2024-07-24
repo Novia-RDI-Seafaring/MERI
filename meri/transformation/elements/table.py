@@ -208,7 +208,7 @@ class Table(PageElement):
         # Generate the markdown for each table
         markdown_tables = []
         for table in content.table_contents:
-            markdown_tables.append(table.to_markdown(render_meta_data=False))
+            markdown_tables.append(table.to_markdown(render_meta_data=False, add_bbox_as_attr=True))
 
         print(f"Generated markdown tables: {markdown_tables}")
         return "{}".format(self.bbox_html_comment) + "\n\n".join(markdown_tables+['<br/>'])

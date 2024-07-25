@@ -47,6 +47,7 @@ def build_jsonpath_queries(d, current_path='$', ignore_keys=[], termination_keys
     
     return queries
 
+
 class ExtractionResultItem:
 
     def __init__(self, json_query, gt_value, pred_value=None) -> None:
@@ -55,11 +56,7 @@ class ExtractionResultItem:
         self.pred_value = pred_value
     
     def to_dict(self):
-        return {
-            "json_query": self.json_query,
-            "gt_value":self.gt_value,
-            "pred_value": self.pred_value
-        }
+        return self.__dict__
     
 class ExtractionResults:
 

@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw
 from enum import Enum
 from typing import List
 import deepdoctection as dd
-from .utils import scale_coords
+from .utils import scale_coords, sub_coords_to_abs_coords
 from .tsr import table_transformer_utils as tsr_utils
 
 
@@ -161,27 +161,19 @@ class TSRBasedTableExtractor:
 
         # get text for each cell from pdf
         source_height, source_width = table_np_im.shape[:2]
-        target_height = pdf_full_fitz_page.get_textpage(clip=table_bbox).rect.height
-        target_width = pdf_full_fitz_page.get_textpage(clip=table_bbox).rect.width
-
-        margin_l, margin_top, x1, y1 = table_bbox
-        margin_r = target_width - x1
-        margin_bottom = target_height - y1
-
         for cell in table_cells:
-            pdf_coords = scale_coords(cell['bbox'], source_height, source_width, target_height-margin_top-margin_bottom, target_width-margin_l-margin_r)
-            pdf_coords_adj = [pdf_coords[0]+margin_l, pdf_coords[1]+margin_top,pdf_coords[2]+margin_l, pdf_coords[3]+margin_top ]
+            pdf_coords_adj = sub_coords_to_abs_coords(cell["bbox"], source_height, source_width, table_bbox)
             words = pdf_full_fitz_page.get_textpage(clip=pdf_coords_adj).extractWORDS()
             cell['text'] = ' '.join([w[4]for w in words])
-
+        
         # in image coordinates
         cell_tokens = [{'text': c['text'], 'bbox': c['bbox']} for c in table_cells]
-
+        print('cell tokens: ', cell_tokens)
         out_formats, tsr_im = self.extract(table_np_im, tokens=cell_tokens)
         return out_formats, tsr_im, cells_im
 
     def extract(self, table_np_im, tokens=None):
-        """_summary_
+        """Returned cells are in the coordinates of the table_np_im
 
         Args:
             table_np_im (_type_): numpy array representing table

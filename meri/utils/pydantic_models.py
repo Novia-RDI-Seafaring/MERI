@@ -240,11 +240,11 @@ class TableModel2(BaseModel):
     metadata: TableMetaDataModel = Field(..., description='metadata on the table.')
     cells: List[TableCellModel] = Field(..., description='list of cells in the table')
 
-    def to_markdown(self, render_meta_data: bool = False, add_bbox_as_attr=False):
+    def to_markdown(self, render_meta_data: bool = False, add_bbox_as_attr=True):
 
         return self.to_html(add_bbox_as_attr)
 
-    def to_html(self, add_bbox_as_attr=True):
+    def to_html(self, add_bbox_as_attr=False):
         cells = [c.model_dump() for c in self.cells]
         cells = sorted(cells, key=lambda k: min(k['col_nums']))
         cells = sorted(cells, key=lambda k: min(k['row_nums']))

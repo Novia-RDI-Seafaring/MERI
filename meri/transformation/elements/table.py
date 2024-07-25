@@ -1,5 +1,5 @@
 from ...utils import GPTExtractor, GPT_TOOL_FUNCTIONS
-from ...utils import pil_to_base64, pdf_to_im #pil_to_base64, pdf_to_imm
+from ...utils import pil_to_base64, pdf_to_im, sub_coords_to_abs_coords #pil_to_base64, pdf_to_imm
 from ...utils.pydantic_models import TableContentModel, TableCellContentModel, TableMetaDataModel, TableContentArrayModel, TableArrayModel2, TableCellModel, TableModel2
 from .page_element import PageElement
 from ...utils.table_structure_recognizer import TSRBasedTableExtractor
@@ -163,6 +163,12 @@ class Table(PageElement):
             table_bbox=table_bbox
         )
 
+        # cell bbox are in cropped im coordinates. need to scale to full page coordinates
+        source_height, source_width = np.array(table_im).shape[:2]
+        for table_cells in out_formats["cells"]:
+            for cell in table_cells:
+                cell["bbox"] = sub_coords_to_abs_coords(cell["bbox"] , source_height, source_width, table_bbox)
+
         # only one table
         tables = [TableModel2.from_tsr_cells(table_cells) for table_cells in out_formats['cells']]
         return TableArrayModel2(table_contents=tables)
@@ -202,7 +208,7 @@ class Table(PageElement):
         # Generate the markdown for each table
         markdown_tables = []
         for table in content.table_contents:
-            markdown_tables.append(table.to_markdown(render_meta_data=False))
+            markdown_tables.append(table.to_markdown(render_meta_data=False, add_bbox_as_attr=True))
 
         print(f"Generated markdown tables: {markdown_tables}")
         return "{}".format(self.bbox_html_comment) + "\n\n".join(markdown_tables+['<br/>'])

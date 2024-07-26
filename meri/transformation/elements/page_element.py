@@ -45,14 +45,22 @@ class PageElement(ABC):
         self.children += elements
     
     @property
-    def bbox_html_comment(self) -> str:
-        """_summary_
+    def attribute_str(self):
+        atts = {
+            "bbox": self.pdf_bbox,
+            "page_index": self.page_idx
+        }
+        atts_str = ' '.join(f'{key}={value}' for key, value in atts.items())
 
-        Returns:
-            str: Bounding box of page element as html comment string. 
-        """
-        return f"<!-- Bounding box (x0,y0,x1,y1): {self.pdf_bbox} -->"
+        return atts_str
     
+    """ 
+    @property
+    def bbox_html_comment(self) -> str:
+        
+        return f"<!-- Bounding box (x0,y0,x1,y1): {self.pdf_bbox} Page index: {self.page_idx} -->"
+    """
+
     @property
     def outer_bbox(self):
         """We assume that all textblocks that are overlapping with the detected bbox, should actually be contained in the bbox. 

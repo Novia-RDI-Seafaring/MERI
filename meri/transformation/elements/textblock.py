@@ -29,7 +29,7 @@ class TextBlock(PageElement):
         content = self.get_content()
         
         if self.text_type is None:
-            return '<br/>{} {} <br/>'.format(self.bbox_html_comment, content)
+            return '<div {}> {} <div/>'.format(self.attribute_str, content)
         
         text_type_list = self.text_type.split('_')
 
@@ -42,7 +42,7 @@ class TextBlock(PageElement):
             return markdown_str
         
         else:
-            return '<br/>{} {} <br/>'.format(self.bbox_html_comment, content)
+            return '<div {}>{} <div/>'.format(self.attribute_str, content)
         
 
     def text(self):

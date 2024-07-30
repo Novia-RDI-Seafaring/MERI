@@ -26,7 +26,7 @@ def create_openai_tools_arr(func_name, func_desc, output_schema):
 
 class JsonExtractor:
 
-    def __init__(self, intermediate_format: BasicFormatHandler, chunks_max_characters=1000, chunk_overlap=2,  n_rounds=1, model='gpt-4o', api_key: str = None) -> None:
+    def __init__(self, intermediate_format: BasicFormatHandler, chunks_max_characters=1000, chunk_overlap=2,  n_rounds=1, model='gpt-4o-mini', api_key: str = None) -> None:
         
         self.intermediate_format = intermediate_format # markdown or html
         # if api_key is None:

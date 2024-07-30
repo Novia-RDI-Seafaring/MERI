@@ -38,7 +38,7 @@ class IterativePopulationStrategies(Enum):
 
 class IterativeJsonPopulator:
 
-    def __init__(self, json_schema_str: str, strategy: IterativePopulationStrategies, n_rounds=3, model = 'gpt-4o', api_key: str = None) -> None:
+    def __init__(self, json_schema_str: str, strategy: IterativePopulationStrategies, n_rounds=3, model = 'gpt-4o-mini', api_key: str = None) -> None:
         self.json_schema_str = json_schema_str
         self.population_strategy = strategy
         self.model = model

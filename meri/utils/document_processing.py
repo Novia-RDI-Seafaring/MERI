@@ -226,7 +226,7 @@ class DocumentProcessor:
             return f"Error reading JSON schema: {e}", None
 
         format_handler = MarkdownHandler(markdown_str)
-        json_extractor = JsonExtractor(intermediate_format=format_handler, chunk_overlap=0, chunks_max_characters=100000, model='gpt-4o')
+        json_extractor = JsonExtractor(intermediate_format=format_handler, chunk_overlap=0, chunks_max_characters=100000, model='gpt-4o-mini')
 
         try:
             res = json_extractor.populate_schema(json_schema_string=json.dumps(parameter_schema))

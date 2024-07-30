@@ -155,11 +155,9 @@ SELFSUPERVISED_SCHEMA_POPULATION_TMPL = Template(
  
             - Minimize false extractions. Only extract information where you are 99 percent confident that it is correct. If you are not sure, dont populate the schema
                 pop_schema with the parameters.
-            - extracting the "value" might require simple computation based on the "text". e.g. if text is "3+4" the value should be 7.
+            - extracting the "value" might require simple computation based on the "text". e.g. if text is "3+4" the value should be 7 OR 3x 4 then 12.
             - You need to handle composite numbers like "#x## + #x# / #x## + #x#" by calculating the total count.
-            - "#x## + #x# / #x## + #x#"  means 2x2 + 1x1 / 2x2 + 1x1 = 6 + 1 / 4 + 1 = 7 / 5 
             - Information separated by "/" understand that one belongs to side one of the specification, the other to the other side.
-            - Dont rely on the information from technical drawings.
         
         Output:
         

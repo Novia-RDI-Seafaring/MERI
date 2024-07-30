@@ -42,25 +42,32 @@ class Table(PageElement):
                 # Extract text from each block in the table and structure it into rows
                 table_rows = []
                 current_row = []
-                last_top = table[0]['top']
+                last_top = int(round(table[0]['top']))  # yhe integer value
 
                 for block in table:
-                    if block['top'] != last_top:
+                    top = int(round(block['top']))  # The integer value
+                    if top != last_top:
                         if current_row:
                             table_rows.append(current_row)
                         current_row = []
-                    current_row.append(TableCellContentModel(text=block['text'], isheader=False, rowspan=1, colspan=1, bbox=[block['x0'], block['top'], block['x1'], block['bottom']]))
-                    #current_row.append({'text': block['text'], 'bbox': [block['x0'], block['top'], block['x1'], block['bottom']]})
-                    last_top = block['top']
+                    current_row.append(TableCellModel(
+                        text=block['text'],
+                        col_header=False,
+                        row_nums=[top],  # The integer value
+                        col_nums=[int(round(block['x0']))],  # the integer value
+                        bbox=[block['x0'], block['top'], block['x1'], block['bottom']]
+                    ))
+                    last_top = top
                 if current_row:
                     table_rows.append(current_row)
 
-                tables.append(TableContentModel(metadata=table_metadata.model_dump(), rows=[[cell.model_dump() for cell in row] for row in table_rows]))
-                #tables.append(table_text)
-            
-            return TableContentArrayModel(table_contents=[table.model_dump() for table in tables])
+                cells = [cell for row in table_rows for cell in row]
+                tables.append(TableModel2(metadata=table_metadata, cells=cells))
+
+            return TableArrayModel2(table_contents=tables)
         else:
             return []
+
 
     def contained_words(self):
         words = self.fitz_page.get_textpage(clip=self.outer_bbox).extractWORDS()
@@ -174,7 +181,7 @@ class Table(PageElement):
         return TableArrayModel2(table_contents=tables)
 
 
-    def get_content(self) -> TableContentArrayModel | Image.Image:
+    def get_content(self) -> TableArrayModel2 | Image.Image:
 
         if self.content is None:
             if self.method == 'pdfplumber':
@@ -194,7 +201,7 @@ class Table(PageElement):
     def as_markdown_str(self) -> str:
         """ Convert table content into a markdown string. Adds bbox of table element as html comment to markdown string
         """
-        content: TableContentArrayModel | Image.Image = self.get_content()
+        content: TableArrayModel2 | Image.Image = self.get_content()
 
         if not content:
             print("No content found.")

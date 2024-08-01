@@ -4,10 +4,11 @@ transformer:
   FORMAT: 'markdown'
   KWARGS: 
     table_extraction_method: 'tatr'
+    model: 'gpt-4o-mini'
 extractor:
   METHOD: 'populate_schema'
   KWARGS:
     chunks_max_characters: 1000000
     chunk_overlap: 0
     n_rounds: 2
-    model: 'gpt-4o'
+    model: 'gpt-4o-mini'

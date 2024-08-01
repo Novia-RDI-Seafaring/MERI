@@ -16,16 +16,18 @@ class Format(Enum):
 
 class DocumentTransformer:
 
-    def __init__(self, pdf_path: str, table_extraction_method='llm') -> None:
+    def __init__(self, pdf_path: str, table_extraction_method='llm', model='gpt-4o-mini') -> None:
         
         self.fitz_document = fitz.open(pdf_path)
+        self.model = model
         self.plumber_document = pdfplumber.open(pdf_path)
         self.pages: List[PageTransformer] = []
         for i, (fitz_page, plumber_page) in enumerate(list(zip(self.fitz_document, self.plumber_document.pages))):
             try:
                 self.pages.append(PageTransformer(fitz_page, 
                                                 plumber_page,
-                                                table_extraction_method=table_extraction_method))
+                                                table_extraction_method=table_extraction_method,
+                                                model=self.model))
             except NotImplementedError as error:
                 self.pages.append(None)
                 print('Error occured processing page: {}. Error: {}'.format(i,error))
@@ -76,10 +78,10 @@ class PageTransformer:
     deepdoctection pipeline does not get all content.
     """
 
-    def __init__(self, fitz_page: fitz.Page, plumber_page: pdfplumber.page, table_extraction_method = 'llm') -> None:
+    def __init__(self, fitz_page: fitz.Page, plumber_page: pdfplumber.page, table_extraction_method = 'llm', model='gpt-4o-mini') -> None:
         self.fitz_page = fitz_page
         self.plumber_page = plumber_page
-
+        self.model = model
         self.table_extraction_method = table_extraction_method
 
         # initialize it with all raw content. After each match, respective textblock is removed from
@@ -159,7 +161,7 @@ class PageTransformer:
                     element = Figure(bbox, im=cropped_im, fitz_page=self.fitz_page, plumber_page=self.plumber_page)
                 elif match_type == dd.LayoutType.table:
                     element = Table(bbox, im=cropped_im, fitz_page=self.fitz_page, plumber_page=self.plumber_page,
-                                    method=self.table_extraction_method)
+                                    method=self.table_extraction_method, model=self.model)
                 else:
                     raise NotImplementedError
             
@@ -174,3 +176,4 @@ class PageTransformer:
             self.elements += elements
 
         self.unmatched_text_blocks = [self.unmatched_text_blocks[idx] for idx in list(range(len(self.unmatched_text_blocks))) if idx not in list(set(matched_text_block_ids))]
+    

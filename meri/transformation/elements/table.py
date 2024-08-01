@@ -15,7 +15,7 @@ class Table(PageElement):
     """ Content class for Table elements.
     """
 
-    def __init__(self, pdf_bbox: Tuple[float], im: Image, fitz_page: fitz.Page, plumber_page: pdfplumber.page, method='llm') -> None:
+    def __init__(self, pdf_bbox: Tuple[float], im: Image, fitz_page: fitz.Page, plumber_page: pdfplumber.page, method='llm', model='gpt-4o-mini') -> None:
         """
         - pdf_bbox: bounding box in pdf coordinates that outlines table. Given by deepdoctection pipeline
         - im: pil image of table as detected by detector.
@@ -27,6 +27,7 @@ class Table(PageElement):
         self.fitz_page = fitz_page
         self.plumber_page = plumber_page
         self.method = method
+        self.model = model
         self.content: TableContentArrayModel = None
 
     @classmethod
@@ -76,13 +77,13 @@ class Table(PageElement):
         return words
 
     @classmethod
-    def extract_table_llm(cls, fitz_page: fitz.Page, clip=None, custom_jinja_prompt=None) -> TableArrayModel2:
+    def extract_table_llm(cls, fitz_page: fitz.Page, clip=None, custom_jinja_prompt=None, model='gpt-4o-mini') -> TableArrayModel2:
         table_im = pdf_to_im(fitz_page, cropbbox=clip)
 
         words = fitz_page.get_textpage(clip=clip).extractWORDS()
         words = [w[:5] for w in words]
 
-        gpt_extractor = GPTExtractor()  # GPTLayoutElementExtractor()
+        gpt_extractor = GPTExtractor(model=model)  # GPTLayoutElementExtractor()
         try:
             raw_tables = gpt_extractor.extract_content(GPT_TOOL_FUNCTIONS.EXTRACT_TABLE_CONTENT, table_im, words_arr=words, custom_jinja_prompt=custom_jinja_prompt)
         except Exception as e:
@@ -187,7 +188,7 @@ class Table(PageElement):
             if self.method == 'pdfplumber':
                 self.content = self.extract_table_plumber(self.plumber_page, clip=self.outer_bbox)
             elif self.method == 'llm':
-                self.content = self.extract_table_llm(self.fitz_page, clip=self.outer_bbox)
+                self.content = self.extract_table_llm(self.fitz_page, clip=self.outer_bbox, model=self.model)
             elif self.method == 'toimage':
                 self.content = self.outer_image
             elif self.method == 'tatr':

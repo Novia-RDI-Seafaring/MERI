@@ -20,10 +20,11 @@ class GPT_TOOL_FUNCTIONS(Enum):
 
 class GPTExtractor:
 
-    def __init__(self, api_key: str = None) -> None:
+    def __init__(self, api_key: str = None, model='gpt-4o-mini') -> None:
         if api_key is None:
             api_key = os.getenv("OPENAI_API_KEY")
         self.client = openai.Client(api_key=api_key)
+        self.model = model
     
     def extract_content(self, tool_func: GPT_TOOL_FUNCTIONS, pil_im: Image, words_arr, custom_jinja_prompt=None):
         """ uses multimodal gpt to extract information from an layout element. Leverages
@@ -60,7 +61,7 @@ meri/transformation/elements/llm_extractor.py
 
         chat_response = chat_completion_request(
             self.client, messages, tools=tools, tool_choice={"type": "function", "function": {"name": tool_func.value}},
-            log_token_usage=True
+            log_token_usage=True, model=self.model
         )
 
         # check if message is complete, else JSON is incorrect

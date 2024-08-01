@@ -49,7 +49,7 @@ class JsonExtractor:
         chunks = self.intermediate_format.chunk(character_threshold=self.chunks_max_characters, overlap=self.chunk_overlap)
         content_chunks = [self.intermediate_format.prepare_gpt_message_content(chunk) for chunk in chunks]
         
-        populator = IterativeJsonPopulator(json_schema_string, IterativePopulationStrategies.SELFSUPERVISED.value, n_rounds=self.n_rounds, model = 'gpt-4o')
+        populator = IterativeJsonPopulator(json_schema_string, IterativePopulationStrategies.SELFSUPERVISED.value, n_rounds=self.n_rounds, model = self.model)
         results = populator.complete(content_chunks)
 
         return results

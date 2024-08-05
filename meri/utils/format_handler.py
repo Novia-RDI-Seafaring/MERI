@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict
 import re
+import xml.etree.ElementTree as ET
+
 
 class BasicFormatHandler(ABC):
 
@@ -31,7 +33,7 @@ class MarkdownHandler(BasicFormatHandler):
         self.markdown_str = self.seperator.join(to_be_joined)
 
     @classmethod
-    def find_first_base64_substring(cls, string):
+    def find_first_base64_substring(cls, xml_string):
         """Finds base64 string that is enclosed in "(" ")"
 
         Args:
@@ -40,6 +42,14 @@ class MarkdownHandler(BasicFormatHandler):
         Returns:
             _type_: _description_
         """
+        xml_tree = ET.ElementTree(ET.fromstring(xml_string))
+        base64_str = xml_tree.find('.//img').attrib['src']
+        if not base64_str:
+            raise TypeError('Didnt find base64 in html tree of image')
+        return base64_str
+
+        """ 
+        
         pattern = r'\(data:[^)]+\)'
 
         # Use re.search to find the match
@@ -51,6 +61,7 @@ class MarkdownHandler(BasicFormatHandler):
             print("No match found.")
 
         return result
+        """
     
     def split(self) -> List[str]:
 
@@ -66,11 +77,19 @@ class MarkdownHandler(BasicFormatHandler):
         parts = self.split()
         types = []
         for markdown_part in parts:
+            xml_tree = ET.ElementTree(ET.fromstring(markdown_part))
+            
+            if  xml_tree.getroot().attrib["className"] == 'image_wrapper':
+                t = 'image'
+            else:
+                t = 'text'
+            """ 
+            
             if markdown_part.startswith("![Figure]"):
                 t = 'image'
             else:
                 t = 'text'
-
+            """
             types.append(t)
 
         return list(zip(types, parts))
@@ -87,26 +106,30 @@ class MarkdownHandler(BasicFormatHandler):
         Returns:
             _type_: _description_
         """
+        print('computing with character threshold: ', character_threshold)
         markdown_parts = self.split_add_type()
         chunks = []
 
         current_chunk = []
         character_counter = 0
+        
         for i, (type, cont) in enumerate(markdown_parts):
             if type == 'text':
                 current_chunk.append((type, cont))
                 character_counter += len(cont)
             elif type == 'image':
+                character_counter += 4000 # approx.500 token per image times avg. 4 characters per token
                 current_chunk.append((type, cont))
             else:
                 current_chunk.append((type, cont))
             
             # chunk complete if character threshold reached OR no more markdown parts left
             if character_counter >= character_threshold or i == len(markdown_parts)-1:
+                print('character count reached: ', character_counter)
                 chunks.append(current_chunk)
 
                 # always add previous markdown part as overlap
-                current_chunk = [*current_chunk[-overlap:]] if len(current_chunk)>0 else []
+                current_chunk = [*current_chunk[-overlap:]] if len(current_chunk)>0 and overlap>0 else []
                 character_counter = 0
 
         return chunks
@@ -133,7 +156,7 @@ class MarkdownHandler(BasicFormatHandler):
                     message_contents.append({"type": "text", "text": ''})
                 message_contents[-1]["text"] = self.seperator.join([message_contents[-1]["text"], cont])
             elif type == 'image':
-                message_contents.append({"type": "image_url", "image_url": {"url": self.find_first_base64_substring(cont), "detail": image_detail}})
+                message_contents.append({"type": "image_url", "image_url": {"url": self.find_first_base64_substring(cont)}})
             else:
                 raise NotImplementedError
         

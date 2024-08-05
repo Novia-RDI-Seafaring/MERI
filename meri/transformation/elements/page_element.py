@@ -50,7 +50,7 @@ class PageElement(ABC):
             "bbox": self.pdf_bbox,
             "page_index": self.page_idx
         }
-        atts_str = ' '.join(f'{key}={value}' for key, value in atts.items())
+        atts_str = ' '.join(f'{key}="{value}"' for key, value in atts.items())
 
         return atts_str
     

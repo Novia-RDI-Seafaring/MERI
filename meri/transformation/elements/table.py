@@ -6,6 +6,8 @@ from ...utils.table_structure_recognizer import TSRBasedTableExtractor
 #from .old_llm_extractor import GPTLayoutElementExtractor, GPT_TOOL_FUNCTIONS
 from PIL import Image
 import PIL
+import xml.etree.ElementTree as ET
+
 import pdfplumber.page
 import fitz
 import numpy as np
@@ -211,7 +213,9 @@ class Table(PageElement):
         # if table is converted to image, just return base64 encoding
         if self.method == 'toimage':
             image_base64 = pil_to_base64(content)
-            return '<div {}> {} <div/>'.format(self.attribute_str, f'<img src="data:image/png;base64,{image_base64}"/>')
+            return '<div {} {}>{}</div>'.format(self.attribute_str, 
+                                                  'className="image_wrapper"',
+                                                  f'<img src="data:image/png;base64,{image_base64}"/>')
         
         # Generate the markdown for each table
         markdown_tables = []
@@ -219,7 +223,12 @@ class Table(PageElement):
             markdown_tables.append(table.to_markdown(render_meta_data=False, add_bbox_as_attr=True))
 
         print(f"Generated markdown tables: {markdown_tables}")
-        return '<div {}>{}<div/>'.format(self.attribute_str, "\n\n".join(markdown_tables+['<br/>']))
+        print('<div {} {}>{}</div>'.format(self.attribute_str, 
+                                            'className="table_wrapper"',
+                                            " ".join(markdown_tables)))
+        return '<div {} {}>{}</div>'.format(self.attribute_str, 
+                                            'className="table_wrapper"',
+                                            " ".join(markdown_tables))
 
     @property
     def outer_image(self):

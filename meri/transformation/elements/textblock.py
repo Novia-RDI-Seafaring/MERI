@@ -29,7 +29,9 @@ class TextBlock(PageElement):
         content = self.get_content()
         
         if self.text_type is None:
-            return '<div {}> {} <div/>'.format(self.attribute_str, content)
+            return '<div {} {}> {} </div>'.format(self.attribute_str, 
+                                                  'className="text_wrapper"',
+                                                  content)
         
         text_type_list = self.text_type.split('_')
 
@@ -42,7 +44,9 @@ class TextBlock(PageElement):
             return markdown_str
         
         else:
-            return '<div {}>{} <div/>'.format(self.attribute_str, content)
+            return '<div {} {}>{} </div>'.format(self.attribute_str,
+                                                 'className="text_wrapper"',
+                                                 content)
         
 
     def text(self):

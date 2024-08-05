@@ -36,7 +36,9 @@ class Figure(PageElement):
             return "![Figure image not found]()" 
 
         image_base64 = pil_to_base64(image)
-        return '<div {}> {} <div/>'.format(self.attribute_str, f'<img src="data:image/png;base64,{image_base64}"/>')
+        return '<div {} {}> {} </div>'.format(self.attribute_str,
+                                               'className="image_wrapper"',
+                                               f'<img src="data:image/png;base64,{image_base64}"/>')
 
     @property
     def outer_image(self):

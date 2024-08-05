@@ -44,7 +44,7 @@ def chat_completion_request(client, messages, tools=None, tool_choice=None, mode
             temperature=temp,
         )
         if log_token_usage:
-            print('Actual Token Usage: ', *response.usage)
+            print('Actual Token Usage {}: {}'.format(model, *response.usage))
         return response
     except Exception as e:
         print("Unable to generate ChatCompletion response")

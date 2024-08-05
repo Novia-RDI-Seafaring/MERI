@@ -247,14 +247,129 @@ class DocumentProcessor:
         except Exception as e:
             return f"Error extracting parameters: {e}", None
         
-    @staticmethod
-    def display_json_schema(file):
-        if file is None:
-            return "No JSON schema uploaded.", None
+    # @staticmethod
+    # def display_json_schema(file):
+    #     if file is None:
+    #         return "No JSON schema uploaded.", None
 
+    #     try:
+    #         with open(file.name, 'r') as f:
+    #             schema_content = json.load(f)
+    #         return schema_content
+    #     except Exception as e:
+    #         return f"Error reading JSON schema: {e}", None
+    
+    @staticmethod
+    def display_json_schema(use_default, file):
         try:
-            with open(file.name, 'r') as f:
-                schema_content = json.load(f)
-            return schema_content
+            if use_default:
+                schema_config_path = os.path.abspath(os.path.join('/workspaces/MERI/data/json_schema/hex.json'))
+                with open(schema_config_path, 'r') as f:
+                    schema_content = f.read()
+            else:
+                if file is None:
+                    return {}, "No JSON schema uploaded."
+
+                with open(file.name, 'r') as f:
+                    schema_content = f.read()
+
+            # Try to load the content as JSON to ensure it's valid
+            json_content = json.loads(schema_content)
+            return json_content, schema_content
         except Exception as e:
-            return f"Error reading JSON schema: {e}", None
+            return {}, f"Error reading JSON schema: {e}"
+    
+    @staticmethod
+    def run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format):
+        try:
+            if use_default:
+                pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
+                with open(pipeline_config_path, 'r') as f:
+                    loaded_yaml = f.read()
+            else:
+                if pipeline_file is None:
+                    return json.dumps({"error": "No pipeline configuration file uploaded."})
+                with open(pipeline_file.name, 'r') as f:
+                    loaded_yaml = f.read()
+
+            pipeline_config = yaml.safe_load(loaded_yaml)
+            if not isinstance(pipeline_config, dict) or 'COMPONENTS' not in pipeline_config:
+                return json.dumps({"error": "Invalid pipeline configuration"})
+
+            pipeline = Pipeline()
+            for comp in pipeline_config['COMPONENTS']:
+                comp_class_name = comp['CLASS']
+                comp_kwargs = comp['KWARGS']
+                comp_class = globals().get(comp_class_name)
+                if comp_class is not None:
+                    pipeline.add(comp_class(**comp_kwargs))
+                else:
+                    return json.dumps({"error": f"Component class {comp_class_name} not found"})
+
+            pipeline.build()
+
+            pdf_path = pdf_file.name
+            dps, page_dicts = pipeline.run(pdf_path)
+
+            all_category_names = []
+            dd_images = []
+            dd_annotations = []
+            for dp in dps:
+                category_names_list = []
+                bboxes = []
+                anns = dp.get_annotation()
+                for ann in anns:
+                    bboxes.append([int(cord) for cord in ann.bbox])
+                    category_names_list.append(ann.category_name.value)
+                annotations = list(zip(bboxes, category_names_list))
+                dd_images.append(dp.image_orig._image)
+                dd_annotations.append(annotations)
+                all_category_names += category_names_list
+
+            # Generate markdown string from annotations                        
+            selected_elements = ['table', 'figure']
+
+            if method == "PDF_Plumber":
+                table_method = 'pdfplumber'
+            elif method == "LLMs":
+                table_method = 'llm'
+            elif method == "TATR":
+                table_method = 'tatr'
+            annotations_to_merge = [dd.LayoutType[element] for element in selected_elements]
+            doc_transformer = DocumentTransformer(pdf_path, table_extraction_method=table_method)
+            doc_transformer.merge_with_annotations(dps, annotations_to_merge)
+            doc_transformer.docorate_unmatched_textblocks()
+
+            if "Markdown" in structured_format:
+                markdown_str = doc_transformer.transform_to(Format.MARKDOWN.value)
+                # print("Markdown string:", markdown_str)
+
+            # Extract parameters using the provided JSON schema and the generated Markdown string
+            try:
+                with open(json_file.name, 'r') as f:
+                    parameter_schema = json.load(f)
+            except Exception as e:
+                return json.dumps({"error": f"Error reading JSON schema: {e}"}), None
+
+            format_handler = MarkdownHandler(markdown_str)
+            json_extractor = JsonExtractor(intermediate_format=format_handler, chunk_overlap=0, chunks_max_characters=100000, model='gpt-4o-mini')
+
+            try:
+                res = json_extractor.populate_schema(json_schema_string=json.dumps(parameter_schema))
+                json_result_str = json.dumps(res, indent=2)  # For displaying in JSON format
+                
+                print("JSON result string:", json_result_str)
+                
+                # Validate JSON
+                try:
+                    json.loads(json_result_str)
+                except json.JSONDecodeError as e:
+                    print(f"Invalid JSON generated: {e}")
+                    return json.dumps({"error": f"Invalid JSON generated: {e}"}), None
+
+                return json_result_str  # extract_result
+            except Exception as e:
+                return json.dumps({"error": str(e)})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+    

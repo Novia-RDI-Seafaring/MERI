@@ -21,6 +21,8 @@ COMPONENTS:
       cfg_path: 'layout_detector_config.yaml'
       method: 'd2layout'
       config_overwrite: ['PT.LAYOUT.FILTER=["text", "title", "list", "table"]']
+  - CLASS: TablePlumberComponent
+    KWARGS: {}
   - CLASS: NMSComponent
     KWARGS:
       cfg_path: 'nms.yaml'

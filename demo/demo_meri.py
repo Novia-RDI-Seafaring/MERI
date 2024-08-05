@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 base_path = os.path.abspath(os.path.join(os.getcwd(), '../MERI'))
 sys.path.append(base_path)
 
@@ -36,6 +37,9 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
     annotated_images = gr.State([])
     dps = gr.State([])  # State to store dps
     markdown_str = gr.State("")  # State to store the generated markdown string
+    yaml_file = gr.State(None)  # State to store the uploaded YAML file
+    json_file = gr.State(None)  # State to store the uploaded JSON file
+    default_pipeline_state = gr.State(False)  # State to store the default_pipeline checkbox state
 
     with gr.Row():
         gr.Markdown("<h1><center>Document MERI Demo</center></h1>")
@@ -50,62 +54,88 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
             with gr.Column(visible=False, elem_classes='image_holder') as annotated_image_row:
                 page_slider = gr.Slider(1, 1, value=1, step=1, interactive=True)
                 anIm = gr.Image(show_label=False, container=False)
+                
+        with gr.Tab("Run individual components"):
+            with gr.Column(elem_id='ControlColumn'):
+                with gr.Accordion(label="Layout Analysis Pipeline", open=False):
+                    with gr.Column(elem_id='ControlColumn'):
+                        with gr.Row():
+                            gr.Markdown("""
+                                # Configure Analysis Pipeline
+                                The document layout is analyzed select a number of components that are being
+                                executed in sequential order by default. Or upload the config YAML file for the components the pipeline.
+                                """)
+                        with gr.Row():
+                            default_pipeline = gr.Checkbox(label='Use Default Pipeline')
+                        with gr.Row():
+                            pipeline_comps = gr.File(label='Configuration YAML')
+                            loaded_yaml_markdown = gr.Markdown(label='Loaded Configuration YAML', elem_classes="scrollable-markdown")
+                        with gr.Row():
+                            pipeline_btn = gr.Button("Run Pipeline", variant="primary")
+                        with gr.Row(visible=False) as detectionResRow:
+                            labelsOfInterest = gr.CheckboxGroup([], every=0.5, info='Select elements that should be displayed', label='Detected Layout Elements')
+                            displayLabels = gr.Button("Show Elements", variant="primary")
 
-        with gr.Column(elem_id='ControlColumn'):
-            with gr.Accordion(label="Layout Analysis Pipeline", open=False):
+                with gr.Accordion(label="Structured Format", open=False):
+                    with gr.Column(elem_id='ControlColumn'):
+                        with gr.Row():
+                            gr.Markdown("""
+                                # Intermediary Structure Transformation
+                                This is transforming the document's structure into intermediary formats, 
+                                such as Markdown.
+                                """)
+                        with gr.Row(elem_classes="intermediary_structure"):
+                            with gr.Column():
+                                displayMode = gr.Radio(["PDF_Plumber", "LLMs", "TATR"], info='Select the method you want', label='Method to run')
+                            with gr.Column():
+                                intermedia_comps = gr.CheckboxGroup(["Markdown"], info='Choose the intermediate format you want', label='Structured Format')
+                        with gr.Row():
+                            show_markdown_btn = gr.Button("Show content", variant="primary")
+                        with gr.Row():
+                            markdown_result = gr.Markdown(label="Markdown Result", visible=True, elem_classes="scrollable-markdown")
+                
+                with gr.Accordion(label="Parameter Extraction", open=False):
+                    with gr.Column():
+                        with gr.Row():
+                            gr.Markdown("""
+                                # Configure Parameter Extraction
+                                The parameters are extracted from the document based on the provided JSON configuration.
+                                """)
+
+                        with gr.Row():
+                            json_input = gr.File(label="JSON Configuration")
+                            json_schema = gr.JSON(label="JSON Schema Content", visible=True, elem_classes="scrollable-json")
+                        with gr.Row():
+                            extract_btn = gr.Button("Extract Parameters", variant="primary")
+                        with gr.Row():
+                            json_result = gr.JSON(label="JSON Parameter Result", visible=True, elem_classes="scrollable-jsons")
+                        with gr.Row():
+                            download_btn = gr.File(label="Download JSON")
+                            
+        with gr.Tab("Run entire pipeline"):
+            with gr.Accordion(label="Run entire pipeline Extraction", open=False):
                 with gr.Column(elem_id='ControlColumn'):
                     with gr.Row():
                         gr.Markdown("""
-                            # Configure Analysis Pipeline
-                            The document layout is analyzed select a number of components that are being
-                            executed in sequential order by default. Or upload the config YAML file for the components the pipeline.
+                            # Run Entire Pipeline
+                            This is a one-click button to run the entire pipeline and component.
                             """)
                     with gr.Row():
-                        default_pipeline = gr.Checkbox(label='Use Default Pipeline')
+                        default_pipeline2 = gr.Checkbox(label='Default Pipeline')
+                        # default_schema = gr.Checkbox(label='Use Default Schema')
                     with gr.Row():
-                        pipeline_comps = gr.File(label='Configuration YAML')
-                        loaded_yaml_markdown = gr.Markdown(label='Loaded Configuration YAML', elem_classes="scrollable-markdown")
-                    with gr.Row():
-                        pipeline_btn = gr.Button("Run Pipeline", variant="primary")
-                    with gr.Row(visible=False) as detectionResRow:
-                        labelsOfInterest = gr.CheckboxGroup([], every=0.5, info='Select elements that should be displayed', label='Detected Layout Elements')
-                        displayLabels = gr.Button("Show Elements", variant="primary")
+                        pipeline_comps2 = gr.File(label='Configuration YAML')
+                        json_input2 = gr.File(label="JSON Configuration")
+                    with gr.Column():
+                        displayMode2 = gr.Radio(["PDF_Plumber", "LLMs", "TATR"], info='Select the method you want', label='Method to run')
+                    with gr.Column():
+                        intermedia_comps2 = gr.CheckboxGroup(["Markdown"], info='Choose the intermediate format you want', label='Structured Format')
+            with gr.Row():
+                run_pipeline_btn = gr.Button("Run", variant="primary")
+            with gr.Row():
+                entire_pipeline_res_markdown = gr.JSON(label="Pipeline JSON Parameter Result", visible=True, elem_classes="scrollable-jsons")
 
-            with gr.Accordion(label="Structured Format", open=False):
-                with gr.Column(elem_id='ControlColumn'):
-                    with gr.Row():
-                        gr.Markdown("""
-                            # Intermediary Structure Transformation
-                            This is transforming the document's structure into intermediary formats, 
-                            such as Markdown.
-                            """)
-                    with gr.Row(elem_classes="intermediary_structure"):
-                        with gr.Column():
-                            displayMode = gr.Radio(["PDF_Plumber", "LLMs", "TATR"], info='Select the method you want', label='Method to run')
-                        with gr.Column():
-                            intermedia_comps = gr.CheckboxGroup(["Markdown"], info='Choose the intermediate format you want', label='Structured Format')
-                    with gr.Row():
-                        show_markdown_btn = gr.Button("Show content", variant="primary")
-                    with gr.Row():
-                        markdown_result = gr.Markdown(label="Markdown Result", visible=True, elem_classes="scrollable-markdown")
             
-            with gr.Accordion(label="Parameter Extraction", open=False):
-                with gr.Column():
-                    with gr.Row():
-                        gr.Markdown("""
-                            # Configure Parameter Extraction
-                            The parameters are extracted from the document based on the provided JSON configuration.
-                            """)
-
-                    with gr.Row():
-                        json_input = gr.File(label="JSON Configuration")
-                        json_schema = gr.JSON(label="JSON Schema Content", visible=True, elem_classes="scrollable-json")
-                    with gr.Row():
-                        extract_btn = gr.Button("Extract Parameters", variant="primary")
-                    with gr.Row():
-                        json_result = gr.JSON(label="JSON Parameter Result", visible=True, elem_classes="scrollable-jsons")
-                    with gr.Row():
-                        download_btn = gr.File(label="Download JSON")
 
     # Upload the PDF and display the images
     page_slider.change(processor.select_im, inputs=[images, annotated_images, page_slider], outputs=[anIm])
@@ -115,8 +145,56 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
     def on_pipeline_comps_change(use_default, file):
         return processor.display_yaml_file(use_default, file)
     
+    def update_yaml_file(file):
+        return file, file
+    
+    def update_json_file(file):
+        return file, file
+    
+    def update_default_pipeline_state(state):
+        return state, state
+    
+    def on_pipeline_schema_change(use_default, file):
+        schema_content, _ = processor.display_json_schema(use_default, file)
+        return schema_content
+
+
+
+    # Sync the loaded YAML file across tabs
     default_pipeline.change(fn=on_pipeline_comps_change, inputs=[default_pipeline, pipeline_comps], outputs=loaded_yaml_markdown)
     pipeline_comps.change(fn=on_pipeline_comps_change, inputs=[default_pipeline, pipeline_comps], outputs=loaded_yaml_markdown)
+    
+    
+    # synchronization across tabs
+    # default_schema.change(fn=on_pipeline_schema_change, inputs=[default_schema, json_input], outputs=json_schema)
+    # default_schema2.change(fn=on_pipeline_schema_change, inputs=[default_schema2, pipeline_comps2], outputs=json_schema)
+    
+    # Sync YAML file upload across tabs
+    pipeline_comps.upload(fn=update_yaml_file, inputs=pipeline_comps, outputs=[yaml_file, pipeline_comps2])
+    pipeline_comps2.upload(fn=update_yaml_file, inputs=pipeline_comps2, outputs=[yaml_file, pipeline_comps])
+
+    # Sync JSON file upload across tabs
+    json_input.upload(fn=update_json_file, inputs=json_input, outputs=[json_file, json_input2])
+    json_input2.upload(fn=update_json_file, inputs=json_input2, outputs=[json_file, json_input])
+
+    # Sync default pipeline checkbox state across tabs
+    default_pipeline.change(fn=update_default_pipeline_state, inputs=default_pipeline, outputs=[default_pipeline_state, default_pipeline2])
+    default_pipeline2.change(fn=update_default_pipeline_state, inputs=default_pipeline2, outputs=[default_pipeline_state, default_pipeline])
+    
+    # Sync displayMode across tabs (ADDED)
+    def update_display_mode(value):
+        return value, value
+    
+    displayMode.change(fn=update_display_mode, inputs=displayMode, outputs=[displayMode, displayMode2])
+    displayMode2.change(fn=update_display_mode, inputs=displayMode2, outputs=[displayMode2, displayMode])
+
+    # Sync intermedia_comps across tabs (ADDED)
+    def update_intermedia_comps(value):
+        return value, value
+    
+    intermedia_comps.change(fn=update_intermedia_comps, inputs=intermedia_comps, outputs=[intermedia_comps, intermedia_comps2])
+    intermedia_comps2.change(fn=update_intermedia_comps, inputs=intermedia_comps2, outputs=[intermedia_comps2, intermedia_comps])
+    
 
     def analyze(pdf, use_default, file, page_id):
         return processor.analyze(pdf.name, use_default, file, page_id)
@@ -139,6 +217,21 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
 
     # Display the JSON schema content
     json_input.upload(processor.display_json_schema, inputs=json_input, outputs=json_schema)
-    extract_btn.click(fn=extract_parameters_interface, inputs=[json_input, markdown_str], outputs=[json_result, download_btn])
+    extract_btn.click(fn=extract_parameters_interface, inputs=[json_input2, markdown_str], outputs=[json_result, download_btn])
+    
+    
+    
+    """
+    Entire Pipeline Execution
+    """
+    def on_run_pipeline_click(use_default, pipeline_file, json_file, pdf_file, method, structured_format):
+        result = DocumentProcessor.run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format)
+        return result
+
+    run_pipeline_btn.click(
+        on_run_pipeline_click,
+        inputs=[default_pipeline2, pipeline_comps2, json_input2, pdf, displayMode2, intermedia_comps2],
+        outputs=[entire_pipeline_res_markdown]
+    )
     
 demo.launch()

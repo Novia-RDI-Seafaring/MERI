@@ -32,7 +32,7 @@ dependencies:
     - scipy
     - shapely
     - transformers
-    - deepdoctection
+    - deepdoctection==0.32
     - python-dotenv
     - python-doctr
     - git+https://github.com/Novia-RDI-Seafaring/pdf-data-extractor.git  

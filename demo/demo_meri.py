@@ -40,6 +40,7 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
     yaml_file = gr.State(None)  # State to store the uploaded YAML file
     json_file = gr.State(None)  # State to store the uploaded JSON file
     default_pipeline_state = gr.State(False)  # State to store the default_pipeline checkbox state
+    res = gr.State(None)
 
     with gr.Row():
         gr.Markdown("<h1><center>Document MERI Demo</center></h1>")
@@ -154,9 +155,10 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
     def update_default_pipeline_state(state):
         return state, state
     
-    def on_pipeline_schema_change(use_default, file):
-        schema_content, _ = processor.display_json_schema(use_default, file)
-        return schema_content
+    # Change this to read the JSON schema properly
+    # def on_pipeline_schema_change(use_default, file): # THIS IS A WORONG APPROACH TO READING THE JSON SCHEMA
+    #     schema_content, _ = processor.display_json_schema(use_default, file)
+    #     return schema_content
 
 
 
@@ -212,26 +214,51 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
                             outputs=[markdown_result, markdown_str])
 
     # Parameter Extraction
+    # def extract_parameters_interface(json_file, markdown_str):
+    #     return processor.extract_parameters(json_file, markdown_str)
+    
+    # GET BOTH JSON AND MARKDOWN TOGETHER SUCH THAT YOU CAN HHIHGLIGHT THE TEXT
     def extract_parameters_interface(json_file, markdown_str):
-        return processor.extract_parameters(json_file, markdown_str)
+        #json_result_str, output_file, res
+        json_result_str, output_file, res = processor.extract_parameters(json_file, markdown_str)
+        return json_result_str, res, output_file
+        #extracted_data, json_result_str, res = processor.extract_parameters(json_file, markdown_str)
+        #return extracted_data, res, json_result_str
 
     # Display the JSON schema content
-    json_input.upload(processor.display_json_schema, inputs=json_input, outputs=json_schema)
-    extract_btn.click(fn=extract_parameters_interface, inputs=[json_input2, markdown_str], outputs=[json_result, download_btn])
+    json_input.upload(processor.display_json_schema, inputs=[json_input, json_input2], outputs=json_schema)
+    json_input2.upload(processor.display_json_schema, inputs=[json_input, json_input2], outputs=json_schema)
+    extract_btn.click(fn=extract_parameters_interface, inputs=[json_input, markdown_str], outputs=[json_result, res, download_btn])
     
     
     
     """
     Entire Pipeline Execution
     """
-    def on_run_pipeline_click(use_default, pipeline_file, json_file, pdf_file, method, structured_format):
-        result = DocumentProcessor.run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format)
-        return result
+    def on_run_pipeline_click(use_default, pipeline_file, json_file, pdf_file, method, structured_format, page_slider):
+        json_result, res, _ = DocumentProcessor.run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format, page_slider)
+        return json_result, res
 
     run_pipeline_btn.click(
         on_run_pipeline_click,
-        inputs=[default_pipeline2, pipeline_comps2, json_input2, pdf, displayMode2, intermedia_comps2],
-        outputs=[entire_pipeline_res_markdown]
+        inputs=[default_pipeline2, pipeline_comps2, json_input2, pdf, displayMode2, intermedia_comps2, page_slider],
+        outputs=[entire_pipeline_res_markdown, res]
     )
+    
+    # Function to highlight extracted text on PDF
+    def on_highlight_text_click(res, pdf_images, page_slider):
+        highlighted_images = processor.highlight_extracted_text_on_pdf(pdf_images, res, page_slider)
+        return gr.update(value=highlighted_images)
+
+    # UI Element to trigger highlight
+    highlight_btn = gr.Button("Highlight Extracted Text")
+
+    # Update the click event for highlighting,
+    highlight_btn.click(
+        fn= processor.highlight_extracted_text_on_pdf, #on_highlight_text_click,
+        inputs=[images, res, page_slider], 
+        outputs=[annotated_images, anIm]
+    )
+
     
 demo.launch()

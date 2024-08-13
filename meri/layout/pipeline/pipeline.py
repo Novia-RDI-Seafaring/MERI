@@ -10,6 +10,7 @@ from ..pipeline_components import (AddPDFInfoComponent,
                 TableDetectorComponent,
                 WordUnionComponent,
                 TablePlumberComponent,
+                TextDetectorComponent,
                 NMSComponent)
 
 component_name_class_map = {
@@ -22,7 +23,8 @@ component_name_class_map = {
     TableDetectorComponent.__name__: TableDetectorComponent,
     WordUnionComponent.__name__: WordUnionComponent,
     NMSComponent.__name__: NMSComponent,
-    TablePlumberComponent.__name__: TablePlumberComponent
+    TablePlumberComponent.__name__: TablePlumberComponent,
+    TextDetectorComponent.__name__: TextDetectorComponent
 }
 
 

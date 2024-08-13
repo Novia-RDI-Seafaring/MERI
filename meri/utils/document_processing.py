@@ -8,8 +8,8 @@ from PIL import Image, ImageDraw
 import gradio as gr
 
 import deepdoctection as dd
-from meri.layout.pipeline_components import (AddPDFInfoComponent, 
-                        DummyDetectorComponent, 
+from meri.layout.pipeline_components import (AddPDFInfoComponent,
+                        DummyDetectorComponent,
                         LayoutDetectorComponent,
                         OCRComponent,
                         DrawingsDetectorComponent,
@@ -24,7 +24,7 @@ from meri.layout.pipeline_components.utils import ProcessingService, CONFIGS_PAT
 from meri.utils.format_handler import MarkdownHandler
 from meri.extraction.extractor import JsonExtractor
 from meri.transformation.transformer import DocumentTransformer, Format
-
+from meri.utils.utils import scale_coords, pdf_to_im
 # from pathlib import Path
 # sys.path.append(str(Path(__file__).resolve().parent.parent / 'MERI'))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../MERI')))
@@ -98,10 +98,14 @@ class DocumentProcessor:
         images = []
         doc = fitz.open(pdf_path)
         for page in doc:
+            #pil_image = pdf_to_im(page)
+
             rect = page.search_for(" ")
             pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), clip=rect)
             pil_image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+           
             images.append(np.asarray(pil_image))
+            print('images size: ', np.asarray(pil_image).shape)
         return images, gr.update(visible=False), gr.update(visible=True), gr.update(value=images[idx-1]), gr.update(maximum=len(images))
 
     @staticmethod
@@ -115,7 +119,7 @@ class DocumentProcessor:
 
     @staticmethod
     def analyze(pdf_path, use_default, file, page_id):
-        try: 
+        try:
             if use_default:
                 # pipeline_config_path = Path(CONFIGS_PATH) / 'good_pipeline.yaml'
                 pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
@@ -162,7 +166,7 @@ class DocumentProcessor:
                 all_category_names += category_names_list
 
             return (dd_images, dd_images, dd_images[page_id-1], dd_annotations,
-                    gr.update(choices=np.unique(all_category_names).tolist()), 
+                    gr.update(choices=np.unique(all_category_names).tolist()),
                     gr.update(visible=True), dps)
         except Exception as e:
             return f"Error processing pipeline: {e}", None, None, None, None, None
@@ -214,51 +218,41 @@ class DocumentProcessor:
     @staticmethod
     def extract_parameters(json_file, markdown_str):
         if json_file is None:
-            return "No JSON schema uploaded.", None
+            return "No JSON schema uploaded.", None, None
 
         if not markdown_str:
-            return "No Markdown content available for extraction.", None
+            return "No Markdown content available for extraction.", None, None
 
         try:
             with open(json_file.name, 'r') as f:
                 parameter_schema = json.load(f)
         except Exception as e:
-            return f"Error reading JSON schema: {e}", None
-
+            return json.dumps({"error": f"Error reading JSON schema: {e}"}), None, None
+        print("###### Parameter schema FIRST ######:", parameter_schema)
         format_handler = MarkdownHandler(markdown_str)
         json_extractor = JsonExtractor(intermediate_format=format_handler, chunk_overlap=0, chunks_max_characters=100000, model='gpt-4o-mini')
 
         try:
+            print("Starting schema population...")
             res = json_extractor.populate_schema(json_schema_string=json.dumps(parameter_schema))
             json_result_str = json.dumps(res, indent=2)  # For displaying in JSON format
-            
             # Validate JSON
+            print("JSON result string:", json_result_str)
             try:
                 json.loads(json_result_str)
             except json.JSONDecodeError as e:
                 print(f"Invalid JSON generated: {e}")
-                return f"Invalid JSON generated: {e}", None
+                return f"Invalid JSON generated: {e}", None, None
 
             output_file = 'extracted_parameters.json'
             with open(output_file, 'w') as f:
                 f.write(json_result_str)
 
-            return res, output_file
+            return json_result_str, output_file, res
         except Exception as e:
-            return f"Error extracting parameters: {e}", None
-        
-    # @staticmethod
-    # def display_json_schema(file):
-    #     if file is None:
-    #         return "No JSON schema uploaded.", None
+            return f"Error extracting parameters: {e}", None, None
 
-    #     try:
-    #         with open(file.name, 'r') as f:
-    #             schema_content = json.load(f)
-    #         return schema_content
-    #     except Exception as e:
-    #         return f"Error reading JSON schema: {e}", None
-    
+
     @staticmethod
     def display_json_schema(use_default, file):
         try:
@@ -278,9 +272,9 @@ class DocumentProcessor:
             return json_content, schema_content
         except Exception as e:
             return {}, f"Error reading JSON schema: {e}"
-    
+
     @staticmethod
-    def run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format):
+    def run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format, page_id):
         try:
             if use_default:
                 pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
@@ -326,7 +320,7 @@ class DocumentProcessor:
                 dd_annotations.append(annotations)
                 all_category_names += category_names_list
 
-            # Generate markdown string from annotations                        
+            # Generate markdown string from annotations
             selected_elements = ['table', 'figure']
 
             if method == "PDF_Plumber":
@@ -350,16 +344,16 @@ class DocumentProcessor:
                     parameter_schema = json.load(f)
             except Exception as e:
                 return json.dumps({"error": f"Error reading JSON schema: {e}"}), None
-
+            print("###### Parameter schema SECOND ######:", parameter_schema)
             format_handler = MarkdownHandler(markdown_str)
             json_extractor = JsonExtractor(intermediate_format=format_handler, chunk_overlap=0, chunks_max_characters=100000, model='gpt-4o-mini')
 
             try:
                 res = json_extractor.populate_schema(json_schema_string=json.dumps(parameter_schema))
                 json_result_str = json.dumps(res, indent=2)  # For displaying in JSON format
-                
-                print("JSON result string:", json_result_str)
-                
+
+                print("JSON result string 2:", json_result_str)
+
                 # Validate JSON
                 try:
                     json.loads(json_result_str)
@@ -367,9 +361,61 @@ class DocumentProcessor:
                     print(f"Invalid JSON generated: {e}")
                     return json.dumps({"error": f"Invalid JSON generated: {e}"}), None
 
-                return json_result_str  # extract_result
+                return json_result_str, res, (dd_images, dd_images, dd_images[page_id-1], dd_annotations,
+                    gr.update(choices=np.unique(all_category_names).tolist()),
+                    gr.update(visible=True), dps)  # extract_result
             except Exception as e:
                 return json.dumps({"error": str(e)})
         except Exception as e:
             return json.dumps({"error": str(e)})
-    
+
+
+    @staticmethod
+    def highlight_extracted_text_on_pdf(pdf_images, extracted_data, page_id):
+        """
+        pdf_images: List of numpy arrays, each representing a page of the PDF.
+        extracted_data: The JSON structure as shown above.
+        """
+        # Convert numpy arrays to PIL images
+        annotated_images = []
+
+        highlighted_images = [Image.fromarray(img) for img in pdf_images]
+        highlighted_draws = [ImageDraw.Draw(pil_image, mode='RGBA') for pil_image in highlighted_images]
+        contained_bboxes, page_idxs = extract_bboxes_and_pageindex(extracted_data)
+        assert len(contained_bboxes) == len(page_idxs)
+
+        for bbox, page_idx in zip(contained_bboxes, page_idxs):
+            source_height, source_width = np.multiply(pdf_images[page_idx].shape[:2],0.5) # 792, 612 # TODO dynamically from pdf shape
+            target_height, target_width = np.asarray(highlighted_images[page_idx]).shape[:2]
+            scaled_bbox = scale_coords(bbox, source_height, source_width, target_height, target_width)
+            highlighted_draws[page_idx].rectangle(scaled_bbox, outline="red", width=3)
+
+        for im in highlighted_images:
+            print('Shapes: ', np.asarray(im).shape)
+            annotated_images.append(np.asarray(im))
+            
+        print(f"Source (PDF) dimensions: {source_width}x{source_height}")
+        print(f"Target image dimensions: {target_width}x{target_height}")
+        print(f"Original bbox: {bbox}, Scaled bbox: {scaled_bbox}")
+
+
+        return annotated_images, annotated_images[page_id-1], gr.update(value=annotated_images[page_id-1])
+
+
+
+def extract_bboxes_and_pageindex(dictionary: dict):
+    bboxes = []
+    pageIndexes = []
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            bbox, pageIndex  = extract_bboxes_and_pageindex(value)
+            bboxes.extend(bbox)
+            pageIndexes.extend(pageIndex)
+        elif key == 'bbox':
+            bboxes.append(value)
+        elif key == 'pageIndex':
+            pageIndexes.append(value)
+
+    return bboxes, pageIndexes
+
+

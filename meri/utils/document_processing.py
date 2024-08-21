@@ -224,6 +224,7 @@ class DocumentProcessor:
             return "No Markdown content available for extraction.", None, None
 
         try:
+            print(f"Opening JSON file: {json_file.name}")
             with open(json_file.name, 'r') as f:
                 parameter_schema = json.load(f)
         except Exception as e:
@@ -235,6 +236,7 @@ class DocumentProcessor:
         try:
             print("Starting schema population...")
             res = json_extractor.populate_schema(json_schema_string=json.dumps(parameter_schema))
+            print("Populate schema result:", res)
             json_result_str = json.dumps(res, indent=2)  # For displaying in JSON format
             # Validate JSON
             print("JSON result string:", json_result_str)
@@ -254,18 +256,19 @@ class DocumentProcessor:
 
 
     @staticmethod
-    def display_json_schema(use_default, file):
+    def display_json_schema(file1, file2):
         try:
-            if use_default:
-                schema_config_path = os.path.abspath(os.path.join('/workspaces/MERI/data/json_schema/hex.json'))
-                with open(schema_config_path, 'r') as f:
-                    schema_content = f.read()
-            else:
-                if file is None:
-                    return {}, "No JSON schema uploaded."
+            schema_content = None
 
-                with open(file.name, 'r') as f:
+            if file1 is not None:
+                with open(file1.name, 'r') as f:
                     schema_content = f.read()
+            elif file2 is not None:
+                with open(file2.name, 'r') as f:
+                    schema_content = f.read()
+            
+            if schema_content is None:
+                return {}, "No JSON schema uploaded."
 
             # Try to load the content as JSON to ensure it's valid
             json_content = json.loads(schema_content)
@@ -361,12 +364,15 @@ class DocumentProcessor:
                     print(f"Invalid JSON generated: {e}")
                     return json.dumps({"error": f"Invalid JSON generated: {e}"}), None
 
-                return json_result_str, res, (dd_images, dd_images, dd_images[page_id-1], dd_annotations,
-                    gr.update(choices=np.unique(all_category_names).tolist()),
-                    gr.update(visible=True), dps)  # extract_result
+                return json_result_str, res
+            #, (dd_images, dd_images, dd_images[page_id-1], dd_annotations,
+            #        gr.update(choices=np.unique(all_category_names).tolist()),
+            #        gr.update(visible=True), dps)  # extract_result
             except Exception as e:
+                print("e 1")
                 return json.dumps({"error": str(e)})
         except Exception as e:
+            print("e 2")
             return json.dumps({"error": str(e)})
 
 
@@ -394,8 +400,8 @@ class DocumentProcessor:
             print('Shapes: ', np.asarray(im).shape)
             annotated_images.append(np.asarray(im))
             
-        print(f"Source (PDF) dimensions: {source_width}x{source_height}")
-        print(f"Target image dimensions: {target_width}x{target_height}")
+        print(f"Source (PDF) dimensions: {source_width} x {source_height}")
+        print(f"Target image dimensions: {target_width} x {target_height}")
         print(f"Original bbox: {bbox}, Scaled bbox: {scaled_bbox}")
 
 

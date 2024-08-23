@@ -40,21 +40,9 @@ class TextBlock(PageElement):
         if text_type_list[0] == 'h':
             h_n = int(text_type_list[1])
             print("h", h_n)
-<<<<<<< HEAD
             return '<h{} {} {}> {} </h{}>'.format(h_n, self.attribute_str,
                                                   'className="text_wrapper"',
                                                   content, h_n)
-=======
-            return '<h{} {} {}> {} </h{}>'.format(h_n, self.attribute_str, 
-                                                  'className="text_wrapper"',
-                                                  content, h_n)
-            """ 
-            markdown_str+= (int(text_type_list[1]) * '#' + ' ')
-
-            markdown_str += content
-            return markdown_str
-            """
->>>>>>> origin/main
         
         else:
             return '<div {} {}>{} </div>'.format(self.attribute_str,

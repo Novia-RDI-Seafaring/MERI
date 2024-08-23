@@ -265,7 +265,6 @@ class DocumentProcessor:
             return f"Error extracting parameters: {e}", None, None
 
 
-<<<<<<< HEAD
     # @staticmethod
     # def display_json_schema(file1, file2):
     #     try:
@@ -299,24 +298,6 @@ class DocumentProcessor:
                 return {}, "No JSON schema uploaded."
 
             # load the content as JSON
-=======
-    @staticmethod
-    def display_json_schema(file1, file2):
-        try:
-            schema_content = None
- 
-            if file1 is not None:
-                with open(file1.name, 'r') as f:
-                    schema_content = f.read()
-            elif file2 is not None:
-                with open(file2.name, 'r') as f:
-                    schema_content = f.read()
-           
-            if schema_content is None:
-                return {}, "No JSON schema uploaded."
- 
-            # Try to load the content as JSON to ensure it's valid
->>>>>>> origin/main
             json_content = json.loads(schema_content)
             return json_content #, schema_content
         except Exception as e:

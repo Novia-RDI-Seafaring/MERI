@@ -202,7 +202,7 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
         return processor.analyze(pdf.name, use_default, file, page_id)
 
     pipeline_btn.click(fn=analyze, inputs=[pdf, default_pipeline, pipeline_comps, page_slider], 
-                       outputs=[annotated_images, images, anIm, annotations, labelsOfInterest, detectionResRow, dps])
+                       outputs=[annotations, labelsOfInterest, detectionResRow, dps])
     displayLabels.click(fn=processor.draw_bboxes_on_im, inputs=[images, labelsOfInterest, page_slider, annotations], outputs=[annotated_images, anIm])
     
     # Structured Format Transformation

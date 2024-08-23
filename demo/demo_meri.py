@@ -149,54 +149,8 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
     def update_yaml_file(file):
         return file, file
     
-    def update_json_file(file):
-        return file, file
-    
-    def update_default_pipeline_state(state):
-        return state, state
-    
-    # Change this to read the JSON schema properly
-    # def on_pipeline_schema_change(use_default, file): # THIS IS A WORONG APPROACH TO READING THE JSON SCHEMA
-    #     schema_content, _ = processor.display_json_schema(use_default, file)
-    #     return schema_content
-
-
-
-    # Sync the loaded YAML file across tabs
     default_pipeline.change(fn=on_pipeline_comps_change, inputs=[default_pipeline, pipeline_comps], outputs=loaded_yaml_markdown)
     pipeline_comps.change(fn=on_pipeline_comps_change, inputs=[default_pipeline, pipeline_comps], outputs=loaded_yaml_markdown)
-    
-    
-    # synchronization across tabs
-    # default_schema.change(fn=on_pipeline_schema_change, inputs=[default_schema, json_input], outputs=json_schema)
-    # default_schema2.change(fn=on_pipeline_schema_change, inputs=[default_schema2, pipeline_comps2], outputs=json_schema)
-    
-    # Sync YAML file upload across tabs
-    pipeline_comps.upload(fn=update_yaml_file, inputs=pipeline_comps, outputs=[yaml_file, pipeline_comps2])
-    pipeline_comps2.upload(fn=update_yaml_file, inputs=pipeline_comps2, outputs=[yaml_file, pipeline_comps])
-
-    # Sync JSON file upload across tabs
-    json_input.upload(fn=update_json_file, inputs=json_input, outputs=[json_file, json_input2])
-    json_input2.upload(fn=update_json_file, inputs=json_input2, outputs=[json_file, json_input])
-
-    # Sync default pipeline checkbox state across tabs
-    default_pipeline.change(fn=update_default_pipeline_state, inputs=default_pipeline, outputs=[default_pipeline_state, default_pipeline2])
-    default_pipeline2.change(fn=update_default_pipeline_state, inputs=default_pipeline2, outputs=[default_pipeline_state, default_pipeline])
-    
-    # Sync displayMode across tabs (ADDED)
-    def update_display_mode(value):
-        return value, value
-    
-    displayMode.change(fn=update_display_mode, inputs=displayMode, outputs=[displayMode, displayMode2])
-    displayMode2.change(fn=update_display_mode, inputs=displayMode2, outputs=[displayMode2, displayMode])
-
-    # Sync intermedia_comps across tabs (ADDED)
-    def update_intermedia_comps(value):
-        return value, value
-    
-    intermedia_comps.change(fn=update_intermedia_comps, inputs=intermedia_comps, outputs=[intermedia_comps, intermedia_comps2])
-    intermedia_comps2.change(fn=update_intermedia_comps, inputs=intermedia_comps2, outputs=[intermedia_comps2, intermedia_comps])
-    
 
     def analyze(pdf, use_default, file, page_id):
         return processor.analyze(pdf.name, use_default, file, page_id)
@@ -214,31 +168,24 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
                             outputs=[markdown_result, markdown_str])
 
     # Parameter Extraction
-    # def extract_parameters_interface(json_file, markdown_str):
-    #     return processor.extract_parameters(json_file, markdown_str)
-    
-    # GET BOTH JSON AND MARKDOWN TOGETHER SUCH THAT YOU CAN HHIHGLIGHT THE TEXT
     def extract_parameters_interface(json_file, markdown_str):
-        #json_result_str, output_file, res
-        json_result_str, output_file, res = processor.extract_parameters(json_file, markdown_str)
-        return json_result_str, res, output_file
-        #extracted_data, json_result_str, res = processor.extract_parameters(json_file, markdown_str)
-        #return extracted_data, res, json_result_str
+        return processor.extract_parameters(json_file, markdown_str)
 
     # Display the JSON schema content
-    json_input.upload(processor.display_json_schema, inputs=[json_input, json_input2], outputs=json_schema)
-    json_input2.upload(processor.display_json_schema, inputs=[json_input, json_input2], outputs=json_schema)
-    extract_btn.click(fn=extract_parameters_interface, inputs=[json_input, markdown_str], outputs=[json_result, res, download_btn])
-    
+    json_input.upload(processor.display_json_schema, inputs=json_input, outputs=json_schema)
+    extract_btn.click(fn=extract_parameters_interface, inputs=[json_input, markdown_str], outputs=[json_result, download_btn,  res])
     
     
     """
     Entire Pipeline Execution
     """
     def on_run_pipeline_click(use_default, pipeline_file, json_file, pdf_file, method, structured_format, page_slider):
-        json_result, res, _ = DocumentProcessor.run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format, page_slider)
-        return json_result, res
+        json_result, res = DocumentProcessor.run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format, page_slider)
 
+
+        #json_result, res, _ = DocumentProcessor.run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format, page_slider)
+        return json_result, res
+    json_input2.upload(processor.display_json_schema, inputs=json_input2, outputs=json_schema)
     run_pipeline_btn.click(
         on_run_pipeline_click,
         inputs=[default_pipeline2, pipeline_comps2, json_input2, pdf, displayMode2, intermedia_comps2, page_slider],

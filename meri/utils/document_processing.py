@@ -255,24 +255,41 @@ class DocumentProcessor:
             return f"Error extracting parameters: {e}", None, None
 
 
+    # @staticmethod
+    # def display_json_schema(file1, file2):
+    #     try:
+    #         schema_content = None
+
+    #         if file1 is not None:
+    #             with open(file1.name, 'r') as f:
+    #                 schema_content = f.read()
+    #         elif file2 is not None:
+    #             with open(file2.name, 'r') as f:
+    #                 schema_content = f.read()
+            
+    #         if schema_content is None:
+    #             return {}, "No JSON schema uploaded."
+
+    #         # load the content as JSON
+    #         json_content = json.loads(schema_content)
+    #         return json_content #, schema_content
+    #     except Exception as e:
+    #         return {}, f"Error reading JSON schema: {e}"
     @staticmethod
-    def display_json_schema(file1, file2):
+    def display_json_schema(file):
         try:
             schema_content = None
 
-            if file1 is not None:
-                with open(file1.name, 'r') as f:
-                    schema_content = f.read()
-            elif file2 is not None:
-                with open(file2.name, 'r') as f:
+            if file is not None:
+                with open(file.name, 'r') as f:
                     schema_content = f.read()
             
             if schema_content is None:
                 return {}, "No JSON schema uploaded."
 
-            # Try to load the content as JSON to ensure it's valid
+            # load the content as JSON
             json_content = json.loads(schema_content)
-            return json_content, schema_content
+            return json_content #, schema_content
         except Exception as e:
             return {}, f"Error reading JSON schema: {e}"
 
@@ -394,6 +411,7 @@ class DocumentProcessor:
             source_height, source_width = np.multiply(pdf_images[page_idx].shape[:2],0.5) # 792, 612 # TODO dynamically from pdf shape
             target_height, target_width = np.asarray(highlighted_images[page_idx]).shape[:2]
             scaled_bbox = scale_coords(bbox, source_height, source_width, target_height, target_width)
+            print(f"Original bbox: {bbox}, Scaled bbox: {scaled_bbox}")
             highlighted_draws[page_idx].rectangle(scaled_bbox, outline="red", width=3)
 
         for im in highlighted_images:

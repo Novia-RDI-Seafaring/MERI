@@ -160,12 +160,12 @@ class DocumentProcessor:
                 for ann in anns:
                     bboxes.append([int(cord) for cord in ann.bbox])
                     category_names_list.append(ann.category_name.value)
-                annotations = list(zip(bboxes, category_names_list))
+                annotations = (list(zip(bboxes, category_names_list)), dp.image_orig._image.shape)
                 dd_images.append(dp.image_orig._image)
                 dd_annotations.append(annotations)
                 all_category_names += category_names_list
 
-            return (dd_images, dd_images, dd_images[page_id-1], dd_annotations,
+            return (dd_annotations,
                     gr.update(choices=np.unique(all_category_names).tolist()),
                     gr.update(visible=True), dps)
         except Exception as e:
@@ -186,13 +186,23 @@ class DocumentProcessor:
         for image, annotations in zip(images, all_annotations):
             pil_image = Image.fromarray(image)
             im_draw= ImageDraw.Draw(pil_image, mode='RGBA')
-            for (bbox, label) in annotations:
+
+            # annotations is tuple of (bbox, label) and original image shape for which predictionw as made
+            source_height, source_width = annotations[1][:2]
+            target_height, target_width = image.shape[:2]
+
+            for (bbox, label) in annotations[0]:
                 if label in rel_labels:
                     fill_c = list(color_map[label])
-                    # fill_c = [int(c*255) for c in fill_c]
+                    # fill_c = [int(c*255) for c in filsl_c]
                     fill_c[-1] = 80
                     outline_c = [int(c*255) for c in color_map[label]]
-                    im_draw.rectangle(bbox, outline=tuple(outline_c), fill=tuple(fill_c), width=4)
+                    bbox_scaled = scale_coords(bbox, 
+                                               source_height=source_height,
+                                               source_width=source_width,
+                                               target_height=target_height,
+                                               target_width=target_width)
+                    im_draw.rectangle(bbox_scaled, outline=tuple(outline_c), fill=tuple(fill_c), width=4)
             annotated_images.append(np.asarray(pil_image))
         return annotated_images, gr.update(value=annotated_images[page_id-1])
 
@@ -255,6 +265,7 @@ class DocumentProcessor:
             return f"Error extracting parameters: {e}", None, None
 
 
+<<<<<<< HEAD
     # @staticmethod
     # def display_json_schema(file1, file2):
     #     try:
@@ -288,6 +299,24 @@ class DocumentProcessor:
                 return {}, "No JSON schema uploaded."
 
             # load the content as JSON
+=======
+    @staticmethod
+    def display_json_schema(file1, file2):
+        try:
+            schema_content = None
+ 
+            if file1 is not None:
+                with open(file1.name, 'r') as f:
+                    schema_content = f.read()
+            elif file2 is not None:
+                with open(file2.name, 'r') as f:
+                    schema_content = f.read()
+           
+            if schema_content is None:
+                return {}, "No JSON schema uploaded."
+ 
+            # Try to load the content as JSON to ensure it's valid
+>>>>>>> origin/main
             json_content = json.loads(schema_content)
             return json_content #, schema_content
         except Exception as e:

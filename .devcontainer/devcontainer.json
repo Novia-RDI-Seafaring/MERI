@@ -1,0 +1,15 @@
+
+{
+	"name": "python3",
+	"build": {
+		"dockerfile": "../docker/Dockerfile"
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [7860], 
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "conda env create -f environment.yaml",
+	"runArgs": ["--gpus=all"
+    ]
+}

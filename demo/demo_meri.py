@@ -137,11 +137,16 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
                 entire_pipeline_res_markdown = gr.JSON(label="Pipeline JSON Parameter Result", visible=True, elem_classes="scrollable-jsons")
 
             
-
+    """
+    Upload PDF and Display Images and Annotated Images
+    """
     # Upload the PDF and display the images
     page_slider.change(processor.select_im, inputs=[images, annotated_images, page_slider], outputs=[anIm])
     pdf.upload(processor.upload_pdf_new, inputs=[pdf, page_slider], outputs=[images, pdfUpload, annotated_image_row, anIm, page_slider])
     
+    """
+    Choose the components for the pipeline cinfiguration or use the default pipeline
+    """
     # Pipeline components to detect the layout elements
     def on_pipeline_comps_change(use_default, file):
         return processor.display_yaml_file(use_default, file)
@@ -152,6 +157,9 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
     default_pipeline.change(fn=on_pipeline_comps_change, inputs=[default_pipeline, pipeline_comps], outputs=loaded_yaml_markdown)
     pipeline_comps.change(fn=on_pipeline_comps_change, inputs=[default_pipeline, pipeline_comps], outputs=loaded_yaml_markdown)
 
+    """
+    Layout Analysis Pipeline running and displaying the detected elements
+    """
     def analyze(pdf, use_default, file, page_id):
         return processor.analyze(pdf.name, use_default, file, page_id)
 
@@ -159,6 +167,10 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
                        outputs=[annotations, labelsOfInterest, detectionResRow, dps])
     displayLabels.click(fn=processor.draw_bboxes_on_im, inputs=[images, labelsOfInterest, page_slider, annotations], outputs=[annotated_images, anIm])
     
+    
+    """
+    Extracting the Intermediary Structure and Displaying the Markdown
+    """
     # Structured Format Transformation
     def transform_structure_interface(method, selected_elements, structured_format, pdf, dps):
         return processor.transform_structure(method, selected_elements, structured_format, pdf.name, dps)
@@ -167,6 +179,9 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
                             inputs=[displayMode, labelsOfInterest, intermedia_comps, pdf, dps], 
                             outputs=[markdown_result, markdown_str])
 
+    """
+    Parameter Extraction from the Document
+    """
     # Parameter Extraction
     def extract_parameters_interface(json_file, markdown_str):
         return processor.extract_parameters(json_file, markdown_str)
@@ -176,6 +191,7 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
     extract_btn.click(fn=extract_parameters_interface, inputs=[json_input, markdown_str], outputs=[json_result, download_btn,  res])
     
     
+    """ ############################# Entire Pipeline Execution ################################## """
     """
     Entire Pipeline Execution
     """
@@ -192,6 +208,9 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
         outputs=[entire_pipeline_res_markdown, res]
     )
     
+    """
+    Highlight Extracted DATA with Bounding Boxes
+    """
     # Function to highlight extracted text on PDF
     def on_highlight_text_click(res, pdf_images, page_slider):
         highlighted_images = processor.highlight_extracted_text_on_pdf(pdf_images, res, page_slider)

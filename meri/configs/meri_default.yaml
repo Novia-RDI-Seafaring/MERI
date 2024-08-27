@@ -1,5 +1,5 @@
 layout_analysis:
-  CONFIG_PATH: '/workspaces/meri/meri/layout/config/good_pipeline.yaml'
+  CONFIG_PATH: '/workspaces/MERI/meri/layout/config/good_pipeline.yaml'
 transformer:
   FORMAT: 'markdown'
   KWARGS: 

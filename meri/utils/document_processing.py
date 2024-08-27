@@ -216,6 +216,8 @@ class DocumentProcessor:
             table_method = 'tatr'
         # table_method = method.lower()
         annotations_to_merge = [dd.LayoutType[element] for element in selected_elements]
+        # # Instead of using only selected_elements, use all layout types
+        # annotations_to_merge = list(dd.LayoutType.values())
         doc_transformer = DocumentTransformer(pdf_path, table_extraction_method=table_method)
         doc_transformer.merge_with_annotations(dps, annotations_to_merge)
         doc_transformer.docorate_unmatched_textblocks()
@@ -265,26 +267,6 @@ class DocumentProcessor:
             return f"Error extracting parameters: {e}", None, None
 
 
-    # @staticmethod
-    # def display_json_schema(file1, file2):
-    #     try:
-    #         schema_content = None
-
-    #         if file1 is not None:
-    #             with open(file1.name, 'r') as f:
-    #                 schema_content = f.read()
-    #         elif file2 is not None:
-    #             with open(file2.name, 'r') as f:
-    #                 schema_content = f.read()
-            
-    #         if schema_content is None:
-    #             return {}, "No JSON schema uploaded."
-
-    #         # load the content as JSON
-    #         json_content = json.loads(schema_content)
-    #         return json_content #, schema_content
-    #     except Exception as e:
-    #         return {}, f"Error reading JSON schema: {e}"
     @staticmethod
     def display_json_schema(file):
         try:

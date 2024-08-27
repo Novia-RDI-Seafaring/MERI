@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Data sheet for a Counter_currentPlateHeatExchanger equipment",
+  "definitions": {
+      "bbox": {
+          "type": "array",
+          "items": {
+              "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+      },
+      "pageIndex": {
+          "description": "Index of the page where the attribute is found",
+          "type": "integer"
+      },
+      "title": {
+          "description": "Title of the data sheet, usually the name of the equipment or the model if the name is not available",
+          "type": "object",
+          "properties": {
+              "text": {
+                  "type": "string"
+              },
+              "bbox": {
+                  "$ref": "#/definitions/bbox"
+              },
+              "pageIndex": {
+                  "$ref": "#/definitions/pageIndex"
+              }
+          },
+          "required": ["text", "bbox", "pageIndex"]
+      },
+      "parameter_properties": {
+          "type": "object",
+          "properties": {
+              "value": {
+                  "type": "number"
+              },
+              "text": {
+                  "type": "string"
+              },
+              "unit": {
+                  "type": "string"
+              },
+              "bbox": {
+                  "$ref": "#/definitions/bbox"
+              },
+              "pageIndex": {
+                  "$ref": "#/definitions/pageIndex"
+              }
+          },
+          "required": ["value", "text", "unit", "bbox", "pageIndex"]
+      }
+  },
+  "type": "object",
+  "properties": {
+      "title": {
+          "$ref": "#/definitions/title"
+      },
+      "technicalSpecifications": {
+          "description": "Technical specification for a centrifugal pump",
+          "type": "object",
+          "properties": {
+              "INSIDE_SURFACE_FINISH": {
+                  "label": "Finish of the inside surface",
+                  "description": "The material of the inside surface finish.",
+                  "desiredUnit": "",
+                  "type": "object",
+                  "properties": {
+                      "parameter_properties": {"$ref": "#/definitions/parameter_properties"}
+                  }
+              },
+              "INLET_WATER_PRESSURE": {
+                  "label": "Inlet water pressure",
+                  "description": "Water pressure of the inlet circuit.",
+                  "desiredUnit": "bar",
+                  "type": "object",
+                  "properties": {
+                      "parameter_properties": {"$ref": "#/definitions/parameter_properties"}
+                  }
+              },
+              "TEMPERATURE_RANGE": {
+                  "label": "Temperature range",
+                  "description": "Range of the temperature",
+                  "desiredUnit": "degree celcius",
+                  "type": "object",
+                  "properties": {
+                      "parameter_properties": {"$ref": "#/definitions/parameter_properties"}
+                  }
+              },
+              "WARRANTY": {
+                  "label": "Warranty of the product",
+                  "description": "Warranty of the product.",
+                  "desiredUnit": "",
+                  "type": "object",
+                  "properties": {
+                      "parameter_properties": {"$ref": "#/definitions/parameter_properties"}
+                  }
+              }
+          }
+      },
+      "notFoundList": {
+          "description": "List of property names that were not found from the document",
+          "type": "array",
+          "items": {
+              "type": "string"
+          }
+      }
+  },
+  "required": ["title", "technicalSpecifications", "notFoundList"]
+}

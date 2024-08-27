@@ -2,6 +2,7 @@
 
 PT:
   LAYOUT:
+    # TATR table detection model https://github.com/microsoft/table-transformer
     WEIGHTS: microsoft/table-transformer-detection/pytorch_model.bin
     FILTER:
 

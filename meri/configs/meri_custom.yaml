@@ -1,0 +1,14 @@
+layout_analysis:
+  CONFIG_PATH: '/workspaces/meri/meri/layout/config/custom.yaml'
+transformer:
+  FORMAT: 'markdown'
+  KWARGS: 
+    table_extraction_method: 'tatr'
+    model: 'gpt-4o-mini-2024-07-18'
+extractor:
+  METHOD: 'populate_schema'
+  KWARGS:
+    chunks_max_characters: 450000 #128k tokens is approx. 5125k characters (avg 4 characters/token)
+    chunk_overlap: 1
+    n_rounds: 2
+    model: 'gpt-4o-mini-2024-07-18'

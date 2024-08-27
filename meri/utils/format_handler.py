@@ -109,7 +109,6 @@ class MarkdownHandler(BasicFormatHandler):
         print('computing with character threshold: ', character_threshold)
         markdown_parts = self.split_add_type()
         chunks = []
-
         current_chunk = []
         character_counter = 0
         
@@ -125,7 +124,6 @@ class MarkdownHandler(BasicFormatHandler):
             
             # chunk complete if character threshold reached OR no more markdown parts left
             if character_counter >= character_threshold or i == len(markdown_parts)-1:
-                print('character count reached: ', character_counter)
                 chunks.append(current_chunk)
 
                 # always add previous markdown part as overlap

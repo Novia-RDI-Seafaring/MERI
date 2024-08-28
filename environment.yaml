@@ -1,4 +1,4 @@
-name: layout_analysis
+name: meri
 channels:
   - defaults
   - pytorch 

@@ -9,7 +9,6 @@
 	"forwardPorts": [7860], 
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "conda env create -f environment.yaml",
 	"runArgs": ["--gpus=all"
     ]
 }

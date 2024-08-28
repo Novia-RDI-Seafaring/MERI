@@ -1,10 +1,8 @@
 from .extraction.extractor import JsonExtractor
-from .layout.pipeline_components.utils import CONFIGS_PATH
 from .utils.format_handler import MarkdownHandler
 from .transformation.transformer import DocumentTransformer, Format
 from .layout import LayoutDetector
 import deepdoctection as dd
-import json
 import yaml
 import os
 
@@ -23,12 +21,14 @@ class MERI:
         self.transformer_config = config['transformer']
         self.extractor_config = config['extractor']
 
+        self.config_yaml_path = config_yaml_path
+
         self.pdf_path=pdf_path
 
 
     def layout_analysis(self):
         
-        pipeline_config_path = os.path.abspath(self.layout_config['CONFIG_PATH'])
+        pipeline_config_path = os.path.abspath(os.path.join(self.config_yaml_path, os.pardir, self.layout_config['CONFIG_PATH'])) #os.path.abspath(self.layout_config['CONFIG_PATH'])
         detector = LayoutDetector(pipeline_config_path=pipeline_config_path)
 
         dps, page_dicts = detector.detect(self.pdf_path)

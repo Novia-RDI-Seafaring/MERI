@@ -20,7 +20,8 @@ from meri.layout.pipeline_components import (AddPDFInfoComponent,
                         TextDetectorComponent,
                         TablePlumberComponent)
 from meri.layout.pipeline import Pipeline
-from meri.layout.pipeline_components.utils import ProcessingService, CONFIGS_PATH
+from meri.layout.pipeline_components.utils import ProcessingService
+from meri.configs import LAYOUT_CONFIGS_PATH
 from meri.utils.format_handler import MarkdownHandler
 from meri.extraction.extractor import JsonExtractor
 from meri.transformation.transformer import DocumentTransformer, Format
@@ -77,7 +78,7 @@ class DocumentProcessor:
         try:
             if use_default:
                 # pipeline_config_path = Path(CONFIGS_PATH) / 'good_pipeline.yaml'
-                pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
+                pipeline_config_path = os.path.abspath(os.path.join(LAYOUT_CONFIGS_PATH, 'good_pipeline.yaml'))
                 with open(pipeline_config_path, 'r') as f:
                     file_content = f.read()
             else:
@@ -122,7 +123,7 @@ class DocumentProcessor:
         try:
             if use_default:
                 # pipeline_config_path = Path(CONFIGS_PATH) / 'good_pipeline.yaml'
-                pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
+                pipeline_config_path = os.path.abspath(os.path.join(LAYOUT_CONFIGS_PATH, 'good_pipeline.yaml'))
                 with open(pipeline_config_path, 'r') as f:
                     loaded_yaml = f.read()
             else:
@@ -289,7 +290,7 @@ class DocumentProcessor:
     def run_pipeline(use_default, pipeline_file, json_file, pdf_file, method, structured_format, page_id):
         try:
             if use_default:
-                pipeline_config_path = os.path.abspath(os.path.join(CONFIGS_PATH, 'good_pipeline.yaml'))
+                pipeline_config_path = os.path.abspath(os.path.join(LAYOUT_CONFIGS_PATH, 'good_pipeline.yaml'))
                 with open(pipeline_config_path, 'r') as f:
                     loaded_yaml = f.read()
             else:

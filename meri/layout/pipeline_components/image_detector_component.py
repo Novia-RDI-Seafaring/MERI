@@ -1,5 +1,4 @@
 import deepdoctection as dd
-import os
 from typing import List
 from .utils import scale_coords
 

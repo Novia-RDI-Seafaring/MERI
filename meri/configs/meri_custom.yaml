@@ -1,5 +1,6 @@
 layout_analysis:
-  CONFIG_PATH: '/workspaces/meri/meri/layout/config/custom.yaml'
+  # relative path to this file
+  CONFIG_PATH: 'layout/custom.yaml'
 transformer:
   FORMAT: 'markdown'
   KWARGS: 

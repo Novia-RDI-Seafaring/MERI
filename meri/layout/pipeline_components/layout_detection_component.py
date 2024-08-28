@@ -1,8 +1,6 @@
 import deepdoctection as dd
-import os
 from typing import List
-import fitz
-from .utils import ProcessingService, CONFIGS_PATH
+from .utils import ProcessingService
 
 
 class LayoutDetectorComponent(dd.ImageLayoutService, ProcessingService):
@@ -14,13 +12,10 @@ class LayoutDetectorComponent(dd.ImageLayoutService, ProcessingService):
     - DETR: only table detection https://huggingface.co/microsoft/table-transformer-detection
     '''
 
-    def __init__(self, cover_prev_anns=False, cfg_path='layout_detector_config.yaml', method='d2layout', config_overwrite=[]):
+    def __init__(self, cfg_path, cover_prev_anns=False, method='d2layout', config_overwrite=[]):
 
         self.cover_prev_anns = cover_prev_anns
         config_overwrite = [] if config_overwrite is None else config_overwrite
-
-        if not os.path.exists(cfg_path):
-            cfg_path = os.path.join(CONFIGS_PATH, cfg_path)
 
         cfg = dd.set_config_by_yaml(cfg_path)
 

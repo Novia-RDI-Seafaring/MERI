@@ -1,8 +1,5 @@
 import deepdoctection as dd
-import os
 from typing import List
-import fitz
-
 
 class DummyDetectorComponent(dd.PipelineComponent):
     ''' Dummy detecotor, could be used to add annotations from pymupdf for example

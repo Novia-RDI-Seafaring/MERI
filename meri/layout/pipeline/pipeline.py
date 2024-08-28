@@ -56,10 +56,15 @@ class Pipeline:
             - CLASS: ...
         '''
         pipeline = cls()
-
+        
         cfg = dd.set_config_by_yaml(cfg_path)
 
         for comp in cfg.COMPONENTS:
+            if "cfg_path" in comp["KWARGS"]:
+                abs_cfg_path = os.path.abspath(os.path.join(cfg_path, os.pardir, comp['KWARGS']["cfg_path"]))
+                comp['KWARGS']["cfg_path"] = abs_cfg_path
+                assert os.path.exists(abs_cfg_path)
+
             pipeline.add(component_name_class_map[comp['CLASS']](**comp['KWARGS']))
         
         return pipeline

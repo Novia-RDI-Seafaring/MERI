@@ -8,27 +8,15 @@ from PIL import Image, ImageDraw
 import gradio as gr
 
 import deepdoctection as dd
-from meri.layout.pipeline_components import (AddPDFInfoComponent,
-                        DummyDetectorComponent,
-                        LayoutDetectorComponent,
-                        OCRComponent,
-                        DrawingsDetectorComponent,
-                        ImageDetectorComponent,
-                        TableDetectorComponent,
-                        WordUnionComponent,
-                        NMSComponent,
-                        TextDetectorComponent,
-                        TablePlumberComponent)
 from meri.layout.pipeline import Pipeline
-from meri.layout.pipeline_components.utils import ProcessingService
 from meri.configs import LAYOUT_CONFIGS_PATH
 from meri.utils.format_handler import MarkdownHandler
 from meri.extraction.extractor import JsonExtractor
 from meri.transformation.transformer import DocumentTransformer, Format
-from meri.utils.utils import scale_coords, pdf_to_im
+from meri.utils.utils import scale_coords
 # from pathlib import Path
 # sys.path.append(str(Path(__file__).resolve().parent.parent / 'MERI'))
-sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../MERI')))
+#sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../MERI')))
 
 class DocumentProcessor:
     @staticmethod

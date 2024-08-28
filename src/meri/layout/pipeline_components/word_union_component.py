@@ -20,7 +20,6 @@ class WordUnionComponent(dd.PipelineComponent):
         for ann in filter(lambda x: x.category_name in self.unite and x.active, dp.annotations):
             bboxes_to_join = [ann.bounding_box]
             for word_ann in filter(lambda x: x.category_name == dd.LayoutType.word and x.active, dp.annotations):
-        
                 iou = dd.coco_iou(word_ann.bounding_box.to_np_array(mode='xyxy')[None], ann.bounding_box.to_np_array(mode='xyxy')[None])
                 if iou>0:
                     bboxes_to_join.append(word_ann.bounding_box)

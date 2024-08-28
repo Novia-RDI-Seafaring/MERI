@@ -1,7 +1,7 @@
-from .extraction.extractor import JsonExtractor
-from .utils.format_handler import MarkdownHandler
-from .transformation.transformer import DocumentTransformer, Format
-from .layout import LayoutDetector
+from meri.extraction.extractor import JsonExtractor
+from meri.utils.format_handler import MarkdownHandler
+from meri.transformation.transformer import DocumentTransformer, Format
+from meri.layout import LayoutDetector
 import deepdoctection as dd
 import yaml
 import os

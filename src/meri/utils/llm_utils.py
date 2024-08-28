@@ -28,7 +28,7 @@ def count_messages(messages, encoding_name='o200k_base'):
     
     return count
 
-def chat_completion_request(client, messages, tools=None, tool_choice=None, model="gpt-4o-mini", log_token_usage=False, temp=0.3, top_p=1.0):
+def chat_completion_request(client, messages, tools=None, tool_choice=None, response_format=None, model="gpt-4o-mini", log_token_usage=False, temp=0.3, top_p=1.0):
 
     if log_token_usage:
         input_token = count_messages(messages)
@@ -40,6 +40,7 @@ def chat_completion_request(client, messages, tools=None, tool_choice=None, mode
             messages=messages,
             tools=tools,
             tool_choice=tool_choice,
+            response_format=response_format,
             max_tokens=4096,
             temperature=temp,
         )

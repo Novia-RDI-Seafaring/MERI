@@ -7,6 +7,27 @@ import os
 import openai
 import tqdm
 
+def create_openai_response_format(name, schema):
+    """_summary_
+
+    Args:
+        name (str): name of the response format
+        schema (_type_): json schema as dict
+
+    Returns:
+        _type_: response_format parameter for openai API request
+    """
+    response_format = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": f"{name}",
+            "strict": True,
+            "schema": schema,
+        }
+    }
+
+    return response_format
+
 def create_openai_tools_arr(func_name, func_desc, output_schema):
 
 
@@ -45,6 +66,10 @@ class IterativeJsonPopulator:
         self.n_rounds = n_rounds
         self.client = openai.Client(api_key=api_key or os.getenv("OPENAI_API_KEY"))
 
+    def get_response_format(self):
+        schema = json.loads(self.json_schema_str)
+        return create_openai_response_format(name="populate_json_schema", schema=schema)
+
     def complete(self, content_chunks: List[List[Dict]]):
         strategy_method = {
             IterativePopulationStrategies.ONE2ONE.value: self.one2one_completion,
@@ -57,7 +82,7 @@ class IterativeJsonPopulator:
         
         return strategy_method[self.population_strategy](content_chunks)
 
-    def process_completion(self, messages, populated_dict, tools):
+    def process_completion(self, messages, populated_dict, response_format=None, tools=None):
         try:
             prompt = generate_self_supervised_json_population_prompt(populated_dict)
             messages = [{"role": "user", "content": [{"type": "text", "text": prompt}] + messages}]
@@ -65,6 +90,7 @@ class IterativeJsonPopulator:
                 client=self.client,
                 messages=messages,
                 tools=tools,
+                response_format = response_format,
                 tool_choice={"type": "function", "function": {"name": "populate_json_schema"}},
                 model=self.model,
                 log_token_usage=True
@@ -85,7 +111,7 @@ class IterativeJsonPopulator:
         for i in range(self.n_rounds):
             print('Round: ', i)
             for c_chunk in tqdm.tqdm(content_chunks, total=len(content_chunks), desc='Processing content chunks'):
-                populated_dict = self.process_completion(c_chunk, populated_dict, tools)
+                populated_dict = self.process_completion(c_chunk, populated_dict, tools=tools)
         return populated_dict
 
     def one2one_completion(self, content_chunks):

@@ -35,7 +35,7 @@ custom_css = """
 
 
 # Define the default configuration file path (if you have one)
-DEFAULT_CONFIG_PATH = "/workspaces/MERI/meri/configs/meri_default.yaml" # "/workspaces/MERI/meri/layout/config/good_pipeline.yaml"
+DEFAULT_CONFIG_PATH = "/workspaces/MERI/src/meri/configs/meri_default.yaml" # "/workspaces/MERI/meri/layout/config/good_pipeline.yaml"
 
 def layout_analysis_interface(pdf, config_yaml_path, use_default):
     
@@ -226,7 +226,7 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
 
     # Update the click event for highlighting,
     highlight_btn.click(
-        fn= processor.highlight_extracted_text_on_pdf, #on_highlight_text_click,
+        fn= processor.highlight_extracted_text_on_pdf,
         inputs=[images, res, page_slider], 
         outputs=[annotated_images, anIm]
     )

@@ -3,11 +3,13 @@ import sys
 import yaml
 import numpy as np
 import json
+base_path = os.path.abspath(os.path.join(os.getcwd(), '../MERI'))
+sys.path.append(base_path)
 import gradio as gr
 from PIL import Image
 from meri.utils.document_processing import DocumentProcessor
 from meri.meri import MERI  # Import the MERI class
-from meri.configs import MERI_CONFIGS_PATH
+
 
 processor = DocumentProcessor()
 
@@ -33,7 +35,7 @@ custom_css = """
 
 
 # Define the default configuration file path (if you have one)
-DEFAULT_CONFIG_PATH = os.path.abspath(os.path.join(MERI_CONFIGS_PATH, "meri_default.yaml"))
+DEFAULT_CONFIG_PATH = "/workspaces/MERI/src/meri/configs/meri_default.yaml" # "/workspaces/MERI/meri/layout/config/good_pipeline.yaml"
 
 def layout_analysis_interface(pdf, config_yaml_path, use_default):
     
@@ -224,7 +226,7 @@ with gr.Blocks(title="Information Extraction from Document", css=custom_css) as 
 
     # Update the click event for highlighting,
     highlight_btn.click(
-        fn= processor.highlight_extracted_text_on_pdf, #on_highlight_text_click,
+        fn= processor.highlight_extracted_text_on_pdf,
         inputs=[images, res, page_slider], 
         outputs=[annotated_images, anIm]
     )

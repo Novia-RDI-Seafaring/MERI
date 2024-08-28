@@ -3,8 +3,6 @@ import sys
 import yaml
 import numpy as np
 import json
-#base_path = os.path.abspath(os.path.join(os.getcwd(), '../MERI'))
-#sys.path.append(base_path)
 import gradio as gr
 from PIL import Image
 from meri.utils.document_processing import DocumentProcessor

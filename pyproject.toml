@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meri"
+version = "0.1.0"
+description = "Package for modality aware information extraction and retrieval from pdf documents."
+authors = [
+    { name = "Christian Möller", email = "christian.moller@novia.fi" },
+    { name = "Lamin Jatta", email = "lamin.jatta@novia.fi" }
+]
+requires-python = ">= 3.8"
+dependencies = [
+    "opencv-python",
+    "notebook",
+    "timm",
+    "PyMuPDF",
+    "pillow",
+    "numpy",
+    "easyocr",
+    "pytesseract",
+    "transformers",
+    "deepdoctection==0.32",
+    "python-dotenv",
+    "python-doctr",
+    "pdfplumber",
+    "gradio",
+    "tabula-py",
+    "tiktoken",
+    "openai",
+    "detectron2 @ git+https://github.com/facebookresearch/detectron2.git"
+]
+
+# Include all .yaml files at any depth in the meri package
+[tool.setuptools.package-data]
+"meri" = ["**/*.yaml"]
+

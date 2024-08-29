@@ -1,6 +1,6 @@
 layout_analysis:
   # relative path to this file
-  CONFIG_PATH: 'layout/good_pipeline.yaml'
+  CONFIG_PATH: 'layout/custom.yaml'
 transformer:
   FORMAT: 'markdown'
   KWARGS: 
@@ -9,7 +9,7 @@ transformer:
 extractor:
   METHOD: 'populate_schema'
   KWARGS:
-    chunks_max_characters: 1000000
-    chunk_overlap: 0
+    chunks_max_characters: 450000 #128k tokens is approx. 5125k characters (avg 4 characters/token)
+    chunk_overlap: 1
     n_rounds: 2
     model: 'gpt-4o-mini'

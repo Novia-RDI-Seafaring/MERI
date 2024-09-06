@@ -15,8 +15,6 @@ RUN wget \
     && mkdir /root/.conda \
     && bash Miniconda3-latest-Linux-x86_64.sh -b \
     && rm -f Miniconda3-latest-Linux-x86_64.sh 
-RUN conda init
 
 
-#RUN conda env create -f environment.yaml
-#RUN conda activate layout_analysis
+RUN pip3 install torch torchvision torchaudio

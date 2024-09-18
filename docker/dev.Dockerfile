@@ -8,8 +8,20 @@ RUN apt-get install -y libgl1-mesa-dev
 RUN apt-get install poppler-utils -y
 RUN apt-get install tesseract-ocr -y
 
-RUN pip3 install torch torchvision torchaudio
+## install conda
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
 
-RUN git clone https://github.com/Novia-RDI-Seafaring/MERI.git
+RUN wget \
+    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && mkdir /root/.conda \
+    && bash Miniconda3-latest-Linux-x86_64.sh -b \
+    && rm -f Miniconda3-latest-Linux-x86_64.sh 
+RUN conda init
 
-RUN pip install -e /MERI
+# activate base env
+RUN echo ". /root/minicondsa3/etc/profile.d/conda.sh" >> ~/.bashrc
+RUN . /root/miniconda3/etc/profile.d/conda.sh && conda activate base
+
+# install torch
+RUN conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia

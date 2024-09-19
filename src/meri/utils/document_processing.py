@@ -14,6 +14,8 @@ from meri.utils.format_handler import MarkdownHandler
 from meri.extraction.extractor import JsonExtractor
 from meri.transformation.transformer import DocumentTransformer, Format
 from meri.utils.utils import scale_coords
+from ..layout.settings import CustomLayoutTypes
+import matplotlib.pyplot as plt
 # from pathlib import Path
 # sys.path.append(str(Path(__file__).resolve().parent.parent / 'MERI'))
 #sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../MERI')))
@@ -160,18 +162,24 @@ class DocumentProcessor:
         except Exception as e:
             return f"Error processing pipeline: {e}", None, None, None, None, None
 
+    @classmethod
+    def get_layoutitem_colormap(cls):
+        cmap = plt.get_cmap('gist_rainbow')  # You can choose any palette, e.g., 'tab10', 'viridis', etc.
+
+        # Create a color map dynamically for each item in CustomLayoutTypes
+        colors = [cmap(i) for i in np.linspace(0, 1, len(CustomLayoutTypes))]
+        color_map = {layout_type: c for (layout_type, c) in zip([x.value for x in CustomLayoutTypes], colors)}
+
+        # Convert RGBA values to 0-255 range and format as integers
+        color_map = {k: (int(v[0] * 255), int(v[1] * 255), int(v[2] * 255), int(v[3] * 255)) for k, v in color_map.items()}
+
+        return color_map
+
     @staticmethod
     def draw_bboxes_on_im(images, rel_labels, page_id, all_annotations):
+        
         annotated_images = []
-        color_map = {
-            'table': (0, 255, 0, 255), # Green
-            'text': (255, 0, 0, 255), # Red
-            'image': (0, 0, 255, 255), # Blue
-            'figure': (255, 255, 0, 255), # Yellow
-            'word': (0, 255, 255, 255), # Cyan
-            'title': (255, 0, 255, 255), # Magenta
-            'list': (255, 165, 0, 255), # Orange
-        }
+        color_map = DocumentProcessor.get_layoutitem_colormap()
         for image, annotations in zip(images, all_annotations):
             pil_image = Image.fromarray(image)
             im_draw= ImageDraw.Draw(pil_image, mode='RGBA')
@@ -183,14 +191,16 @@ class DocumentProcessor:
             for (bbox, label) in annotations[0]:
                 if label in rel_labels:
                     fill_c = list(color_map[label])
+                    outline_c = fill_c.copy()
                     # fill_c = [int(c*255) for c in filsl_c]
                     fill_c[-1] = 80
-                    outline_c = [int(c*255) for c in color_map[label]]
+                    #outline_c = [int(c*255) for c in color_map[label]]
                     bbox_scaled = scale_coords(bbox, 
                                                source_height=source_height,
                                                source_width=source_width,
                                                target_height=target_height,
                                                target_width=target_width)
+                    print("fill_c", label, fill_c, outline_c)
                     im_draw.rectangle(bbox_scaled, outline=tuple(outline_c), fill=tuple(fill_c), width=4)
             annotated_images.append(np.asarray(pil_image))
         return annotated_images, gr.update(value=annotated_images[page_id-1])

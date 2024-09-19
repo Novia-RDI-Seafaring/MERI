@@ -1,6 +1,7 @@
 import deepdoctection as dd
 import os
 from typing import List
+from ..settings import CustomLayoutTypes
 from ..pipeline_components import (AddPDFInfoComponent, 
                 DummyDetectorComponent, 
                 LayoutDetectorComponent,
@@ -42,7 +43,8 @@ class Pipeline:
 
     def build(self):
         print('Building pipeline from components: ', self.component_list)
-        self.pipeline = dd.DoctectionPipe(pipeline_component_list=self.component_list)
+        page_parsing_service = dd.PageParsingService(text_container=dd.LayoutType.word, floating_text_block_categories=[layout_item for layout_item in CustomLayoutTypes])
+        self.pipeline = dd.DoctectionPipe(pipeline_component_list=self.component_list, page_parsing_service=page_parsing_service)
 
     @classmethod
     def from_config(cls, cfg_path):

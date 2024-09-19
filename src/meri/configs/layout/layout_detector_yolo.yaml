@@ -1,0 +1,9 @@
+
+
+PT:
+  LAYOUT:
+    WEIGHTS: layout/docalynet/yolov10x_best.pt
+    FILTER:
+
+LIB: PT
+DEVICE: cuda

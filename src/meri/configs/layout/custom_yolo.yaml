@@ -1,0 +1,13 @@
+
+
+COMPONENTS:
+  - CLASS: AddPDFInfoComponent
+    KWARGS: {}
+  - CLASS: LayoutDetectorComponent 
+    # find bboxes for everything exept for figure and table. These are most difficult, so we do them later
+    # and first get rid of things we can detect reliable
+    KWARGS:
+      cover_prev_anns: False
+      cfg_path: 'layout_detector_yolo.yaml'
+      method: 'yolov10doclay'
+      config_overwrite: ['PT.LAYOUT.FILTER=[]']

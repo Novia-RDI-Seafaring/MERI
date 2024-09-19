@@ -29,9 +29,9 @@ class MERI:
     def layout_analysis(self):
         
         pipeline_config_path = os.path.abspath(os.path.join(self.config_yaml_path, os.pardir, self.layout_config['CONFIG_PATH'])) #os.path.abspath(self.layout_config['CONFIG_PATH'])
-        detector = LayoutDetector(pipeline_config_path=pipeline_config_path)
+        self.detector = LayoutDetector(pipeline_config_path=pipeline_config_path)
 
-        dps, page_dicts = detector.detect(self.pdf_path)
+        dps, page_dicts = self.detector.detect(self.pdf_path)
 
         return dps, page_dicts
 

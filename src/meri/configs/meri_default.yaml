@@ -1,6 +1,6 @@
 layout_analysis:
   # relative path to this file
-  CONFIG_PATH: 'layout/custom.yaml'
+  CONFIG_PATH: 'layout/default.yaml'
 transformer:
   FORMAT: 'markdown'
   KWARGS: 

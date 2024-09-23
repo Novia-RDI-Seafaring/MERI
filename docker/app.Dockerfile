@@ -24,7 +24,7 @@ RUN echo ". /root/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc
 RUN . /root/miniconda3/etc/profile.d/conda.sh && conda activate base
 
 # install torch
-RUN conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+RUN conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia -y
 
 RUN git clone https://github.com/Novia-RDI-Seafaring/MERI.git
 
@@ -37,4 +37,4 @@ ENV GRADIO_SERVER_NAME="0.0.0.0"
 
 EXPOSE 7860
 
-CMD ["python", "demo_meri_v1.py"]
+CMD ["bash", "-c", "source activate base && python demo_meri_v1.py"]

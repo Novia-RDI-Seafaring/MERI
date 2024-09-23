@@ -26,6 +26,7 @@ dependencies = [
     "python-doctr==0.9.0",
     "pdfplumber==0.11.4",
     "gradio==4.42.0",
+    "fastapi==0.112.2",
     "tabula-py==2.9.3",
     "tiktoken==0.7.0",
     "openai==1.42.0",

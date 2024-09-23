@@ -29,6 +29,7 @@ dependencies = [
     "tabula-py==2.9.3",
     "tiktoken==0.7.0",
     "openai==1.42.0",
+    "ultralytics==8.2.96",
     "detectron2 @ git+https://github.com/facebookresearch/detectron2.git@5b72c27ae39f99db75d43f18fd1312e1ea934e60"
 ]
 

@@ -24,7 +24,7 @@ RUN echo ". /root/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc
 RUN . /root/miniconda3/etc/profile.d/conda.sh && conda activate base
 
 # install torch
-RUN pip install conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+RUN conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
 
 RUN git clone https://github.com/Novia-RDI-Seafaring/MERI.git
 

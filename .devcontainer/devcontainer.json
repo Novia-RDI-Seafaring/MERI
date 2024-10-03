@@ -10,7 +10,8 @@
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "pip install -e .",
-	"runArgs": ["--gpus=all"
+	"runArgs": ["--gpus=all",
+	"--network=host"
     ],
 
 	"remoteUser": "root"

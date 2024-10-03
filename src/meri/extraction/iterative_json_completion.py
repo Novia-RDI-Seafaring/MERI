@@ -64,7 +64,6 @@ class IterativeJsonPopulator:
         self.population_strategy = strategy
         self.model = model
         self.n_rounds = n_rounds
-        self.client = openai.Client(api_key=api_key or os.getenv("OPENAI_API_KEY"))
 
     def get_response_format(self):
         schema = json.loads(self.json_schema_str)
@@ -87,13 +86,12 @@ class IterativeJsonPopulator:
             prompt = generate_self_supervised_json_population_prompt(populated_dict)
             messages = [{"role": "user", "content": [{"type": "text", "text": prompt}] + messages}]
             chat_response = chat_completion_request(
-                client=self.client,
                 messages=messages,
                 tools=tools,
                 response_format = response_format,
                 tool_choice={"type": "function", "function": {"name": "populate_json_schema"}},
                 model=self.model,
-                log_token_usage=True
+                log_token_usage=False
             )
             if chat_response.choices[0].finish_reason == 'length':
                 print('GPT finished generation with finish reason length.')

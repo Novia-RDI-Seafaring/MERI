@@ -29,7 +29,8 @@ dependencies = [
     "fastapi==0.112.2",
     "tabula-py==2.9.3",
     "tiktoken==0.7.0",
-    "openai==1.42.0",
+    "openai==1.51.0",
+    "litellm==1.48.10",
     "ultralytics==8.2.96",
     "detectron2 @ git+https://github.com/facebookresearch/detectron2.git@5b72c27ae39f99db75d43f18fd1312e1ea934e60"
 ]

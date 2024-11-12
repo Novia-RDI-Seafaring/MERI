@@ -38,7 +38,7 @@ DEFAULT_CONFIG_PATH = os.path.abspath(os.path.join(MERI_CONFIGS_PATH, "meri_defa
 def layout_analysis_interface(pdf, config_yaml_path, use_default):
     
     config_path = DEFAULT_CONFIG_PATH if use_default else config_yaml_path.name
-    meri_instance = MERI(pdf_path=pdf.name, config_yaml_path=config_path)
+    meri_instance = MERI(pdf_path=pdf.name, config_yaml_path=config_path) # CHANGE THE pdf_path TO input_path ###############
     dps, page_dicts = meri_instance.layout_analysis()
     
     all_category_names = []
@@ -59,13 +59,13 @@ def layout_analysis_interface(pdf, config_yaml_path, use_default):
 
 def transform_to_intermediate_interface(pdf, config_yaml_path, dps, use_default):
     config_path = DEFAULT_CONFIG_PATH if use_default else config_yaml_path.name
-    meri_instance = MERI(pdf_path=pdf.name, config_yaml_path=config_path)
+    meri_instance = MERI(pdf_path=pdf.name, config_yaml_path=config_path) # CHANGE THE pdf_path TO input_path ###############
     intermediate_format = meri_instance.transform_to_intermediate(dps)
     return intermediate_format, intermediate_format  # Return twice to store the markdown in state
 
 def populate_schema_interface(pdf, config_yaml_path, json_schema_path, intermediate_format, use_default):
     config_path = DEFAULT_CONFIG_PATH if use_default else config_yaml_path.name
-    meri_instance = MERI(pdf_path=pdf.name, config_yaml_path=config_path)
+    meri_instance = MERI(pdf_path=pdf.name, config_yaml_path=config_path) # CHANGE THE pdf_path TO input_path ###############
     
     with open(json_schema_path, 'r') as f:
         json_schema = json.load(f)
@@ -83,7 +83,7 @@ def populate_schema_interface(pdf, config_yaml_path, json_schema_path, intermedi
 
 def run_entire_pipeline(pdf, config_yaml_path, json_schema_path, use_default):
     config_path = DEFAULT_CONFIG_PATH if use_default else config_yaml_path.name
-    meri_instance = MERI(pdf_path=pdf.name, config_yaml_path=config_path)
+    meri_instance = MERI(pdf_path=pdf.name, config_yaml_path=config_path) # CHANGE THE pdf_path TO input_path ###############
     with open(json_schema_path, 'r') as f:
         json_schema = json.load(f)
     json_schema_string = json.dumps(json_schema)

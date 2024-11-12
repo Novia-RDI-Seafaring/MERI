@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from .pipeline import Pipeline
 import matplotlib.pyplot as plt
 import os
@@ -40,3 +41,42 @@ class LayoutDetector:
                 #plt.close()  # Close the figure to free memory
             else:
                 plt.imshow(image)
+=======
+from .pipeline import Pipeline
+import matplotlib.pyplot as plt
+import os
+
+class LayoutDetector:
+
+    def __init__(self, pipeline_config_path: str):
+        """
+        Initialize LayoutDetector
+        
+        Args:
+            pipeline_config_path (str): Path to the pipeline config file
+        """
+        self.pipeline_config_path = pipeline_config_path
+
+    def detect(self, pdf_path: str):
+        from .pipeline import Pipeline
+        
+        # Use the config file directly instead of trying to join paths
+        pipeline = Pipeline.from_config(self.pipeline_config_path)
+        
+        # Build the pipeline before running
+        pipeline.build()
+        
+        # Run the pipeline
+        dps, page_dicts = pipeline.run(pdf_path)
+        
+        return dps, page_dicts
+
+    def vis(self):
+        assert self.dps
+
+        for dp in self.dps:
+            image = dp.viz(show_words=False, show_tables=True)
+            plt.figure(figsize = (25,17))
+            plt.axis('off')
+            plt.imshow(image)
+>>>>>>> 8e73fb6 (feat: project restructuring and config management improvements)

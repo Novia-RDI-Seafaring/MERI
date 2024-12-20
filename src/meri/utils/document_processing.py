@@ -9,16 +9,10 @@ import gradio as gr
 
 import deepdoctection as dd
 from meri.layout.pipeline import Pipeline
-from meri.configs import LAYOUT_CONFIGS_PATH
-from meri.utils.format_handler import MarkdownHandler
-from meri.extraction.extractor import JsonExtractor
-from meri.transformation.transformer import DocumentTransformer, Format
-from meri.utils.utils import scale_coords
-from ..layout.settings import CustomLayoutTypes
-import matplotlib.pyplot as plt
-# from pathlib import Path
-# sys.path.append(str(Path(__file__).resolve().parent.parent / 'MERI'))
-#sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../MERI')))
+from meri.config.config_manager import ConfigManager
+
+config_manager = ConfigManager()
+LAYOUT_CONFIGS_PATH = config_manager.get_layout_config_dir()
 
 class DocumentProcessor:
     @staticmethod

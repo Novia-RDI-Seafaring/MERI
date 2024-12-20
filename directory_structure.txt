@@ -1,0 +1,110 @@
+.
+├── LICENSE
+├── README.md
+├── data
+│   ├── demo_data
+│   │   ├── Alfa Laval LKH.pdf
+│   │   └── dummy_schema.json
+│   └── table_extraction
+│       └── annotations
+│           ├── Alfa Laval LKH_2_0.csv
+│           ├── Alfa Laval LKH_2_1.csv
+│           ├── Alfa Laval LKH_2_2.csv
+│           ├── Alfa Laval LKH_2_3.csv
+│           ├── Alfa Laval LKH_2_4.csv
+│           ├── Alfa Laval LKH_2_5.csv
+│           ├── Alfa Laval LKH_2_6.csv
+│           ├── Alfa Laval LKH_2_7.csv
+│           ├── Alfa Laval LKH_2_8.csv
+│           ├── Alfa Laval LKH_2_9.csv
+│           ├── Alfa Laval LKH_3_0.csv
+│           ├── Alfa Laval LKH_3_1.csv
+│           ├── Alfa Laval LKH_3_2.csv
+│           ├── Alfa Laval LKH_3_3.csv
+│           ├── annotation.json
+│           └── annotation_only_diff.json
+├── demo
+│   ├── demo_meri.py
+│   ├── demo_meri_v1.py
+│   └── layout_detection_demo.py
+├── directory_structure.txt
+├── docker
+│   └── Dockerfile
+├── docs
+│   └── notebooks
+│       ├── 1_layout_analysis.ipynb
+│       ├── 2_transformation.ipynb
+│       └── 3_parameter_extraction.ipynb
+├── environment.yaml
+├── evaluation
+│   ├── __init__.py
+│   ├── datasets.py
+│   ├── full_pipeline
+│   │   ├── full_pipeline_evaluator.py
+│   │   └── tests.ipynb
+│   ├── table_evaluator.py
+│   ├── table_extraction_evaluation.ipynb
+│   └── utils.py
+├── extracted_parameters.json
+├── layout_eval
+│   ├── layout_evaluations.py
+│   ├── test.ipynb
+│   └── utils.py
+├── media
+│   ├── demo_video.gif
+│   ├── meri.png
+│   └── meri_logo.svg
+├── pyproject.toml
+├── src
+│   ├── meri
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   └── meri.cpython-312.pyc
+│   │   ├── configs
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   ├── layout
+│   │   │   ├── meri_custom.yaml
+│   │   │   └── meri_default.yaml
+│   │   ├── extraction
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   ├── extractor.py
+│   │   │   └── iterative_json_completion.py
+│   │   ├── layout
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   ├── layout_detector.py
+│   │   │   ├── pipeline
+│   │   │   └── pipeline_components
+│   │   ├── meri.py
+│   │   ├── transformation
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   ├── elements
+│   │   │   └── transformer.py
+│   │   └── utils
+│   │       ├── __init__.py
+│   │       ├── __pycache__
+│   │       ├── document_processing.py
+│   │       ├── format_handler.py
+│   │       ├── llm_extractor.py
+│   │       ├── llm_utils.py
+│   │       ├── prompts.py
+│   │       ├── pydantic_models.py
+│   │       ├── table_structure_recognizer.py
+│   │       ├── tsr
+│   │       └── utils.py
+│   └── meri.egg-info
+│       ├── PKG-INFO
+│       ├── SOURCES.txt
+│       ├── dependency_links.txt
+│       ├── requires.txt
+│       └── top_level.txt
+└── tests
+    ├── test_data
+    │   └── test_csv.csv
+    └── test_evaluation.py
+
+33 directories, 74 files

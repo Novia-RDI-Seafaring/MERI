@@ -1,0 +1,16 @@
+LAYOUT_NMS_PAIRS:
+  COMBINATIONS:
+    - - text
+      - figure
+    - - table
+      - text
+    - - table
+      - table
+    - - figure
+      - figure
+  THRESHOLDS:
+    - 0.2
+    - 0.02
+    - 0.5
+    - 0.6
+  PRIORITY:

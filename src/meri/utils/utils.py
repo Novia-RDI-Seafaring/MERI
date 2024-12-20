@@ -53,12 +53,14 @@ def sub_coords_to_abs_coords(source_coords, source_height, source_width, sub_abs
     Returns:
         _type_: _description_
     """
+    # Extract cropbox margins and dimensions
+    margin_l, margin_top, x1, y1 = sub_abs_cropbox #  top-left coordinates of the cropped shape in the original shape
+    target_height, target_width = y1-margin_top, x1-margin_l # dimensions of the cropped shape in the original shape
 
-    margin_l, margin_top, x1, y1 = sub_abs_cropbox
-    target_height, target_width = y1-margin_top, x1-margin_l
-
+    # Scale source coordinates to the original shape
     pdf_coords = scale_coords(source_coords, source_height, source_width, target_height, target_width)
-    pdf_coords_adj = [pdf_coords[0]+margin_l, pdf_coords[1]+margin_top,pdf_coords[2]+margin_l, pdf_coords[3]+margin_top]
+    # Adjust coordinates to the original shape
+    pdf_coords_adj = [pdf_coords[0]+margin_l, pdf_coords[1]+margin_top,pdf_coords[2]+margin_l, pdf_coords[3]+margin_top] 
 
     return pdf_coords_adj
 

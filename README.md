@@ -1,4 +1,6 @@
-﻿![alt text](media/meri_logo.svg)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Novia-RDI-Seafaring/MERI/badge)](https://scorecard.dev/viewer/?uri=github.com/Novia-RDI-Seafaring/MERI)
+
+ ![alt text](media/meri_logo.svg)
 
 Package for parameter extraction from pdf documents. Provided with a pdf file and json schema, MERI will return a populated dictionary following the provided json schema.
 
@@ -100,10 +102,6 @@ This work was done in the Business Finland funded project [Virtual Sea Trial](ht
 ## License
 
 This package is licensed under the MIT License license. See the [LICENSE](./LICENSE) file for more details.
-
-## OpenSSF Score
-
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Novia-RDI-Seafaring/MERI/badge)](https://scorecard.dev/viewer/?uri=github.com/Novia-RDI-Seafaring/MERI)
 
 ## Citation
 

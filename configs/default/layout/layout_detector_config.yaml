@@ -1,7 +1,0 @@
-PT:
-  LAYOUT:
-    WEIGHTS: layout/d2_model_0829999_layout_inf_only.pt
-    FILTER:
-
-LIB: PT
-DEVICE: cuda

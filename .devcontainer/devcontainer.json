@@ -1,19 +1,17 @@
 {
-	"name": "Python 3",
+	"name": "python3",
 	"build": {
 		"dockerfile": "../docker/dev.Dockerfile"
 	},
-	"features": {
-		"ghcr.io/devcontainers/features/python:1": {}
-	},
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"ms-python.python",
-				"ms-python.vscode-pylance",
-				"ms-toolsai.jupyter"
-			]
-		}
-	},
-	"postCreateCommand": "pip install -e ."
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [7860], 
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "pip install -e .",
+	"runArgs": ["--gpus=all",
+	"--network=host"
+    ],
+
+	"remoteUser": "root"
 }

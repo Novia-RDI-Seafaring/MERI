@@ -1,0 +1,64 @@
+#int_format {
+    /* Reset styles */
+    all: unset;
+    display: block;
+    width: 100%;
+    overflow-y: auto; /* Enable vertical scrolling */
+    max-height: 50vh;
+}
+
+#int_format .table_wrapper {
+    display: block;
+    overflow-x: auto; /* Enable horizontal scrolling for wide tables */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for touch devices */
+    width: 100%; /* Ensure wrapper spans the full container */
+}
+
+#int_format table {
+    table-layout: auto; /* Allow the table to adjust based on content */
+    width: auto; /* Allow table to shrink to fit content */
+    border-collapse: collapse; /* Collapse borders to remove spacing between cells */
+    border-spacing: 0; /* Ensure no extra spacing between cells */
+    margin: 0; /* Remove table margin */
+}
+
+#int_format th,
+#int_format td {
+    padding: 0.25em 0.5em; /* Reduced padding for compact layout */
+    border: 1px solid #ddd; /* Light border between cells */
+    text-align: left; /* Left-align text */
+    font-size: 0.85rem; /* Smaller font size for compact layout */
+    white-space: nowrap; /* Prevent table content from wrapping */
+}
+
+#int_format th {
+    font-weight: bold; /* Ensure headers are bold */
+    background-color: #f4f4f4; /* Light background for header cells */
+    text-transform: uppercase; /* Make headers uppercase */
+}
+
+#int_format tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Zebra striping for better readability */
+}
+
+#int_format tbody tr:hover {
+    background-color: #f1f1f1; /* Highlight row on hover */
+}
+
+#int_format h2 {
+    font-size: 1.5em;
+    margin-bottom: 0.5em; /* Space below headers */
+}
+
+#int_format div, #int_format p {
+    margin-bottom: 0.5em;
+}
+
+#int_format ul {
+    list-style-type: disc;
+    margin-left: 1.5em;
+}
+
+#int_format li {
+    margin-bottom: 0.5em;
+}

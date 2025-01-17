@@ -1,45 +1,31 @@
-[build-system]
-requires = ["setuptools>=70.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "meri"
-version = "0.1.0"
-description = "Package for modality aware information extraction and retrieval from pdf documents."
+version = "0.2.0"
+description = ""
 authors = [
-    { name = "Christian Möller", email = "christian.moller@novia.fi" },
-    { name = "Lamin Jatta", email = "lamin.jatta@novia.fi" }
+    "Christian Möller <christian.moller@novia.fi>",
+    "Lamin Jatta <lamin.jatta@novia.fi>"
 ]
-requires-python = ">= 3.8"
-dependencies = [
-    "setuptools>=70.0.0",
-    "tqdm>=4.66.3",
-    "jinja2>=3.1.5",
-    "gradio>=5.5.1",
-    "opencv-python==4.10.0.84",
-    "notebook==7.2.2",
-    "timm==1.0.9",
-    "PyMuPDF==1.24.9",
-    "pillow==10.4.0",
-    "numpy==1.26.4",
-    "easyocr==1.7.1",
-    "pytesseract==0.3.13",
-    "transformers==4.44.2",
-    "deepdoctection==0.32",
-    "python-dotenv==1.0.1",
-    "python-doctr==0.9.0",
-    "pdfplumber==0.11.4",
-    "fastapi==0.112.2",
-    "tabula-py==2.9.3",
-    "tiktoken==0.7.0",
-    "openai==1.51.0",
-    "litellm==1.48.10",
-    "ultralytics==8.2.96",
-    "huggingface-hub==0.25.2",
-    "detectron2 @ git+https://github.com/facebookresearch/detectron2.git@5b72c27ae39f99db75d43f18fd1312e1ea934e60"
-]
+readme = "README.md"
 
-# Include all .yaml files at any depth in the meri package
-[tool.setuptools.package-data]
-"meri" = ["**/*.yaml"]
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+jupyter = "^1.1.1"
+docling = "2.5.2"
+docling-parse = "2.0.4"
+llama-index = "^0.12.0"
+litellm = "^1.52.10"
+ipykernel = "^6.29.5"
+llama-index-node-parser-docling = "^0.3.0"
+llama-index-readers-docling = "^0.3.0"
+llama-index-embeddings-huggingface = "^0.4.0"
+llama-index-llms-huggingface-api = "^0.3.0"
+llama-index-readers-file = "^0.4.0"
+python-dotenv = "^1.0.1"
+llama-index-llms-litellm = "^0.3.0"
+pymupdf = "^1.24.14"
+fasthtml
 
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

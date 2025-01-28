@@ -6,7 +6,13 @@ from statemanager import StateManager
 from meri.meri import MERI
 from utils import *
 import json
+import argparse
 
+
+# Set up argument parsing
+parser = argparse.ArgumentParser(description="Run the MERI demo.")
+parser.add_argument('--model', type=str, default='gpt-3o-mini', help='LLM to use')
+args = parser.parse_args()
 
 tlink = Script(src="https://cdn.tailwindcss.com"),
 dlink = Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/daisyui@4.11.1/dist/full.min.css")
@@ -44,7 +50,7 @@ def json_collapse(summary: str, json_dict):
                 Div(
                     Pre(
                     json.dumps(json_dict, indent=4),
-                    cls="language-json whitespace-pre-wrap font-mono bg-gray-100 p-4 rounded-lg max-h-[20vh] overflow-y-auto"
+                    cls="language-json whitespace-pre-wrap font-mono bg-gray-100 p-4 rounded-lg max-h-[50vh] overflow-y-auto"
                 ),
                 cls="collapse-content", style="padding: 1rem", id = "schema_panel"),
             cls="collapse bg-base-200")
@@ -52,6 +58,7 @@ def json_collapse(summary: str, json_dict):
 
 
 def header():
+    
     return Title('MERI demo'), Div(
         Img(src="meri_logo.svg", cls="object-scale-down h-10"),
             #H1("MERI", cls="text-3xl font-bold text-center text-black"),
@@ -166,15 +173,7 @@ async def upload_schema(target_schema: File, request: Request = None):
 @app.post("/to_intermediate")
 async def to_intermediate():
 
-    extractor_kwargs = {
-        "chunks_max_characters": 450000,
-        "chunk_overlap": 1,
-        "n_rounds": 1,
-        "model": 'azure/gpt-4o',
-        "model_temp": 0.0
-        }
-    
-    meri = MERI(StateManager().pdf_path, extractor_kwargs=extractor_kwargs)
+    meri = MERI(StateManager().pdf_path, model=args.model)
     meri.to_intermediate()
 
     StateManager().set_meri(meri)

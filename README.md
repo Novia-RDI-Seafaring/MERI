@@ -13,6 +13,8 @@ Package for parameter extraction from pdf documents. Provided with a pdf file an
     - [Development in docker](#development-in-docker)
     - [Run MERI demo in docker](#run-meri-demo-in-docker)
 - [Usage](#usage)
+    - [MERI](#meri-class)
+    - [LLM](#llms)
 - [Demo](#demo)
 - [Method](#method)
 
@@ -20,12 +22,12 @@ Package for parameter extraction from pdf documents. Provided with a pdf file an
 # Installation
 
 Requirements:
-- python 3.12
-- PyTorch ≥ 1.8 and torchvision that matches the PyTorch installation.
-- create .env file in workspace and place open ai key there ```OPENAI_API_KEY='sk-...'```
+- software is tested with python 3.12
+- poetry package manager
+- create .env file in workspace and place the respective variables there (see section [LLM](#llms))
 
 Installation:
-- ```pip install meri @ git+https://github.com/Novia-RDI-Seafaring/MERI/tree/main ```
+- ```pip install meri @ git+https://github.com/Novia-RDI-Seafaring/MERI/tree/main ```. 
 
 Installation from source:
 - ```git clone git@github.com:Novia-RDI-Seafaring/MERI.git¨```
@@ -37,7 +39,7 @@ Installation from source:
 Easiest way to ensure correct setup is to run the project in a docker container. We provide two dockerfiles (```docker/```).
 
 1. dev.Dockerfile installs all dependencies and can be used as a devcontainer in vscode [Development in docker](#development-in-docker)
-2. app.Dockerfile installs all dependencies and runs the meri demo that is accessible via the browser on localhost:7860 [Run meri in docker](#run-meri-in-docker)
+2. app.Dockerfile installs all dependencies and runs the meri demo that is accessible via the browser on localhost:5010 [Run meri in docker](#run-meri-in-docker)
 
 ## Development in docker
 1. Install the following extensions in VSCode:
@@ -50,16 +52,35 @@ Easiest way to ensure correct setup is to run the project in a docker container.
 ## Run MERI demo in docker
 To run MERI gradio demo in docker and forward the respective port:
 1. build image: ```docker build -t meri_app -f /docker/app.Dockerfile .```
-2. run container: ```docker run -it --gpus=all -p 7860:7860 --name meri_app_container meri_app```
+2. run container: ```docker run -it --gpus=all -p 5010:5010 --name meri_app_container meri_app```
 
 Easiest way to ensure correct setup is to run the project in a docker container. We provide a dockerfile (```docker/Dockerfile```) for this purpose. 
 
 # Usage
 
+## MERI Class
+
+The `MERI` class is designed for parameter extraction from PDF documents. It takes several arguments that configure its behavior.
+
+### Arguments
+
+- **`pdf_path`** (`str`): The path to the PDF file from which parameters will be extracted.
+  
+- **`chunks_max_characters`** (`int`, optional): Threshold for chunking the intermediate format. default 450000.
+
+- **`model`** (`str`, optional): Name of the model that is to be used, following the naming of LiteLLM framework. default: gpt-4o-mini
+
+- **`model_temp`** (`str`, optional): Model temperature. default: 0.0.
+
+- **`do_ocr`** (`bool`, optional): Docling configuration. If false the native pdf text is used. If true, ocr is applied to extract the text. default: false.
+
+- **`do_cell_matching`** (`bool`, optional): Refinment of cell detection by layout model through cell matching.
+
+### Example Usage
+
 ```python 
-from meri import MERI, MERI_CONFIGS_PATH
+from meri import MERI
 import json
-import os
 
 pdf_path ='path/to/pdf.pdf'
 
@@ -68,10 +89,7 @@ schema_path ='path/to/schema.json'
 with open(schema_path) as f:
     schema = json.load(f)
 
-# use default configurartion
-config_path=os.path.join(MERI_CONFIGS_PATH, "meri_default.yaml")
-
-meri = MERI(pdf_path=pdf_path, config_yaml_path=config_path)
+meri = MERI(pdf_path=pdf_path)
 
 # populate provided json schema
 populated_schema = meri.run(json.dumps(schema))
@@ -82,18 +100,24 @@ populated_schema = meri.run(json.dumps(schema))
 More examples how to use the package can be found in can be found in ```docs/notebooks```
 
 ### LLMs
-package uses LiteLLM as a wrapper to interact with LLMs. In the meri configuration yaml file (e.g. meri_default.yaml) you can set the model name. For openai models just provide the model name as is. In order to interact with other providers, such as ollama, the model name must have the form ```<provider>/<model>``` e.g. ollama/llava:7b. The models must be multi-modal model, i.e. be able to process text as well as images.
+This package uses LiteLLM as a wrapper to interact with LLMs. The model name can be provided as parameter to MERI and the required environment variable must be set in the .env file. 
+- OpenAI API: provide OPENAI_API_KEY in the .env file. Model name will be e.g. gpt-4o-mini
+- Azure API: provide AZURE_API_KEY and AZURE_API_BASE in the .env and the model name will be e.g. azure/gpt-4o
+
+The models must be multi-modal model, i.e. be able to process text as well as images.
 
 # Demo
-We provide a gradio demo in ```demo```. Run ```python demo/demo_meri_v1.py```. In ```data/demo_data``` we provide a example data sheet alongside a dummy json schema that specifies the parameters of interest. Upload both and run the extraction pipeline.
-
-![alt text](media/demo_video.gif)
+We provide a gradio demo in ```demo```. Run ```poetry run python app/app.py --model gpt-4o-mini```. In ```data/demo_data``` we provide a example data sheet alongside a dummy json schema that specifies the parameters of interest. Upload both and run the extraction pipeline.
 
 # Method
 ![alt text](media/meri.png)
 
-The proposed method requires two inputs: (1) the pdf document and (2) a json schema. Our method will initially detect layout elements such as tables, text and figures. Depending on the layout type different information extraction methods are applied to structurize the content and create an intermediate format (markdown). 
-The intermediate format alongside the json schema are processed by an LLM to populate the extract the specified parameters. The output will follow the provided json schema.
+Parameter extraction from documents with MERI follows the two-step approach: 
+
+(1) Layout elements, such as text, tables, and figures, are detected and individually processed to create an intermediate machine-readable representation of the whole document. 
+
+(2) The intermediate format, along with the task description (prompt and blueprint), is processed by an LLM that outputs a populated version of the blueprint containing found parameters and their attributes. Below is a more in-depth explanation of the steps and formats involved.
+
 
 ## Acknowledgments
 

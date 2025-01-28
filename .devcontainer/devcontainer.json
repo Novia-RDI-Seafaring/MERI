@@ -5,12 +5,11 @@
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [7860], 
+	"forwardPorts": [5010],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip install -e .",
-	"runArgs": ["--gpus=all",
-	"--network=host"
+	"postCreateCommand": "poetry install",
+	"runArgs": ["--gpus=all", "--network=host"
     ],
 
 	"remoteUser": "root"

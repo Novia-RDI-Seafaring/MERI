@@ -7,32 +7,49 @@ Package for parameter extraction from pdf documents. Provided with a pdf file an
 ## Table of Contents
 - [Installation](#installation)
   - [Requirements](#requirements)
-  - [Installation](#installation)
   - [Installation from Source](#installation-from-source)
+  - [Installing Directly from the Repository](#installing-directly-from-the-repository)
 - [Docker](#docker)
     - [Development in docker](#development-in-docker)
-    - [Run MERI demo in docker](#run-meri-demo-in-docker)
 - [Usage](#usage)
     - [MERI](#meri-class)
     - [LLM](#llms)
 - [Demo](#demo)
+  - [Run MERI demo in docker](#run-meri-demo-in-docker)
 - [Method](#method)
 
 
 # Installation
 
-Requirements:
-- software is tested with python 3.12
-- poetry package manager
+This project provides a package that can be installed using Poetry. You can install it either by cloning the repository or by installing directly from the repository.
+
+## Requirements
+
 - create .env file in workspace and place the respective variables there (see section [LLM](#llms))
+- [Poetry](https://python-poetry.org/docs/#installation) is installed.
 
-Installation:
-- ```pip install meri @ git+https://github.com/Novia-RDI-Seafaring/MERI/tree/main ```. 
+## Installing from Source
 
-Installation from source:
-- ```git clone git@github.com:Novia-RDI-Seafaring/MERI.git¨```
-- ```pip install .``` for edible mode ```pip install -e .```
+To install the package from source, follow these steps:
 
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/Novia-RDI-Seafaring/MERI/tree/main
+   cd MERI
+   ```
+
+2. **Install Dependencies**:
+   Make sure you have [Poetry](https://python-poetry.org/docs/#installation) installed. Then, run the following command to install the package and its dependencies:
+   ```bash
+   poetry install
+   ```
+
+
+## Installing Directly from the Repository
+
+```bash
+poetry add git+https://github.com/Novia-RDI-Seafaring/MERI/tree/main
+```
 
 # Docker
 
@@ -49,12 +66,6 @@ Easiest way to ensure correct setup is to run the project in a docker container.
 2. Press STRG + SHIFT + P and select "Dev Container: Open Folder in Container" (devcontainer.json exists in .devcontainer). This will build the docker container and connect the workspace to it.
 
 
-## Run MERI demo in docker
-To run MERI gradio demo in docker and forward the respective port:
-1. build image: ```docker build -t meri_app -f /docker/app.Dockerfile .```
-2. run container: ```docker run -it --gpus=all -p 5010:5010 --name meri_app_container meri_app```
-
-Easiest way to ensure correct setup is to run the project in a docker container. We provide a dockerfile (```docker/Dockerfile```) for this purpose. 
 
 # Usage
 
@@ -107,7 +118,14 @@ This package uses LiteLLM as a wrapper to interact with LLMs. The model name can
 The models must be multi-modal model, i.e. be able to process text as well as images.
 
 # Demo
-We provide a gradio demo in ```demo```. Run ```poetry run python app/app.py --model gpt-4o-mini```. In ```data/demo_data``` we provide a example data sheet alongside a dummy json schema that specifies the parameters of interest. Upload both and run the extraction pipeline.
+We provide a fastHTML demo in ```app```. Run ```poetry run python app/app.py --model gpt-4o-mini```. In ```data/demo_data``` we provide a example data sheet alongside a dummy json schema that specifies the parameters of interest. Upload both and run the extraction pipeline.
+
+
+## Run MERI demo in docker
+We provide a docker compose file to run the MERI demo on port 5010. Per default it uses azure/gpt-4o model. To change please adjust the parameter in the docker-compose.yml.
+```bash
+docker compose up
+```
 
 # Method
 ![alt text](media/meri.png)

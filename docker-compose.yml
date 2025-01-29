@@ -1,0 +1,17 @@
+
+services:
+  meri_app:
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+    ports:
+      - "5010:5010"
+    volumes:
+      - .:/MERI  # Mount the current directory to /MERI in the container
+    working_dir: /MERI
+    command: ["bash", "-c", "poetry install  && poetry run python app/app.py --model azure/gpt-4o"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]  # If you want to use GPUs

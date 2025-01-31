@@ -11,7 +11,7 @@ import argparse
 
 # Set up argument parsing
 parser = argparse.ArgumentParser(description="Run the MERI demo.")
-parser.add_argument('--model', type=str, default='gpt-3o-mini', help='LLM to use')
+parser.add_argument('--model', type=str, default='gpt-4o-mini', help='LLM to use')
 args = parser.parse_args()
 
 tlink = Script(src="https://cdn.tailwindcss.com"),

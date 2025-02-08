@@ -57,9 +57,6 @@ jobs:
           #     of the value entered here.
           publish_results: true
 
-      - name: Debug - List files
-        run: ls -la
-
       # Upload the results as artifacts (optional). Commenting out will disable uploads of run results in SARIF
       # format to the repository Actions tab.
       - name: "Upload artifact"

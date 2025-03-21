@@ -1,0 +1,24 @@
+name: Sync with notion
+
+on:
+  workflow_dispatch: # Allows manual triggering of the workflow
+  push:
+    branches:
+      - main
+    paths:
+      - 'README.md' # Specify the path to the README file
+
+jobs:
+  notion_sync:
+    runs-on: ubuntu-latest
+    name: Sync README to Notion
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Notion Sync Action
+        uses: ./ # Use the local action in the current repository
+        with:
+          notion_token: ${{ secrets.NOTION_TOKEN }}
+          notion_page_id: ${{ secrets.NOTION_PAGE_ID }}
+          repo_description: MERI Parameter Extraction

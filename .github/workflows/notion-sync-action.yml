@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Notion Sync Action
-        uses: ./ # Use the local action in the current repository
+        uses: Novia-RDI-Seafaring/notion-sync-action@main
         with:
           notion_token: ${{ secrets.NOTION_TOKEN }}
           notion_page_id: ${{ secrets.NOTION_PAGE_ID }}
